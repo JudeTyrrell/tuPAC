@@ -1,0 +1,14 @@
+{
+  "name": "tupac",
+  "version": "1.0.0",
+  "description": "Freeform Audio Composition",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "author": "jht44",
+  "license": "ISC",
+  "dependencies": {
+    "electron": "^22.0.0"
+  }
+}
