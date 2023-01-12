@@ -1,22 +1,19 @@
 import p5 from "p5";
-import { Element } from "./element.js";
+import Canvas from "./canvas";
+import { Pair } from "./position";
 
 const winSizeX = 800;
 const winSizeY = 600;
 
-const bgColor = "#77b7bb";
-
 const sketch = (p: p5) => {
-    const elements = [];
-    const elementTest = new Element(10,10,30,30,p);
-
+    const main = new Canvas(new Pair(0,0),new Pair(winSizeX,winSizeY), p, false);
+   
     p.setup = () => {
         p.createCanvas(winSizeX, winSizeY);
     }
 
     p.draw = () => {
-        p.background(bgColor);
-        elementTest.draw();
+        main.draw(new Pair(0,0));
     }
 
     p.mousePressed = () => {
