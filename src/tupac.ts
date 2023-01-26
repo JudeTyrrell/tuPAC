@@ -12,7 +12,9 @@ const sketch = (p: p5) => {
     let cursorOffX: number;
     let cursorOffY: number;
 
-    main.addCanvas(new Pos(100, 100));
+    let inner = main.addCanvas(new Pos(100, 100));
+    inner.setSpeed(50);
+    inner.addSample(Pos.zero(), "../resource/audio/ah.wav");
 
     p.setup = () => {
         p.createCanvas(winSizeX, winSizeY);
@@ -21,12 +23,10 @@ const sketch = (p: p5) => {
     p.draw = () => {
         p.background(220);
         main.draw();
-        let top = main.topUnderMouse(Pos.zero());
-        p.text(top.pos.x + ", " + top.pos.y,100,100);
         if (p.mouseIsPressed) {
             if (p.mouseButton === p.LEFT) {
                 if (held != null) {
-                    //held.move(new Pos(p.movedX, p.movedY)); // This seems to not work for whatever reason
+                    //held.move(new Pos(p.movedX, p.movedY)); // This seems to not work properly for whatever reason
                     let pos = new Pos(p.winMouseX - cursorOffX, p.winMouseY - cursorOffY);
                     held.moveTo(pos);
                     console.log(pos);

@@ -1,5 +1,4 @@
-import Pos from "../dist/position";
-
+import Pos, { Box } from "../dist/position";
 
 test('add function adds (1,1) and (2,2) to be (3,3)', () => {
 	let one = new Pos(1, 1);
@@ -35,3 +34,22 @@ test('inBox only returns true when the given co-ordinate is in the range.', () =
 	expect(Pos.inBox(origin, size, seven)).not.toBeTruthy();
 	expect(Pos.inBox(origin, size, eight)).not.toBeTruthy();
 });
+
+test('Pos.within limits number input to range', () => {
+	let lower = Pos.within(0, 10, -1);
+	let upper = Pos.within(0, 10, 11);
+	let within = Pos.within(0, 10, 3);
+
+	expect(lower).toEqual(0);
+	expect(upper).toEqual(10);
+	expect(within).toEqual(3);
+	expect(() => { Pos.within(10, 0, 1) }).toThrow(RangeError);
+});
+
+test('Box.within limits box input to range', () => {
+	let b = new Box(new Pos(5, 5), new Pos(2, 2));
+	let space = new Box(new Pos(0, 0), new Pos(10, 10));
+	let within = Box.within(b, space);
+
+	expect(within).toEqual(b);
+})

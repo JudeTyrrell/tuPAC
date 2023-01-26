@@ -1,7 +1,7 @@
-import { Element, Playable } from "./element";
+import { Capsule, Element, Playable } from "./element";
 import p5 from "p5";
 import { Transport } from "tone";
-import Pos from "./position";
+import Pos, { Box } from "./position";
 import Sample from "./sample";
 import Button from "./button";
 
@@ -21,7 +21,7 @@ export const buttonSize = 20;
 export class ControlBar extends Element {
     buttons: Button[];
 
-    constructor(size: Pos, p: p5, parent: Element) {
+    constructor(size: Pos, p: p5, parent: Capsule) {
         super(Pos.zero(), size, p, parent, false);
         this.buttons = [];
     }
@@ -33,10 +33,17 @@ export class ControlBar extends Element {
         }
     }
 
-    addButton(name: string, image: string, clicked: Function) {
+    addButton(name: string, image: string, clicked: Function): Button {
         let button = new Button(new Pos(this.buttons.length * (buttonSize + buttonBufferX), buttonBufferY),
-            new Pos(buttonSize, buttonSize), this.p, this, image, clicked, name);
+            new Pos(buttonSize, buttonSize), this.p, this.parent, image, clicked, name);
         this.buttons.push(button);
+        return button;
+    }
+
+    addPlayButton(toPlay: Playable) {
+        this.addButton('play', "../resource/img/play.png", () => {
+            toPlay.play(true);
+        });
     }
 
     // Placeholder until Button class implemented
@@ -59,8 +66,11 @@ export class ControlBar extends Element {
 }
 
 export class TimeBar extends Element {
+    prevX: number;
+
     constructor(p: p5, parent: Canvas) {
-        super(new Pos(0, parent.controlBar.size.y), new Pos(timeBarThickness, parent.size.y-parent.controlBar.size.y), p, parent, true);
+        super(new Pos(0, parent.controlBar.size.y), new Pos(timeBarThickness, parent.size.y - parent.controlBar.size.y), p, parent, true);
+        this.prevX = 0;
     }
 
     draw(offset: Pos): void {
@@ -87,48 +97,41 @@ export class TimeBar extends Element {
         } else if (newPos.x + this.size.x >= this.parent.size.x) {
             newPos.x = this.parent.size.x - this.size.x;
         }
+        this.prevX = this.pos.x;
         this.setPos(newPos);
     }
 }
 
-export default class Canvas extends Element implements Playable {
-    time: number;
-    // Array of elements on this Canvas. Elements are drawn in order of increasing index, and so the later an element's index in this array, the closer to the 'top' it is.
-    playables: Playable[];
+export default class Canvas extends Capsule {
     controlBar: ControlBar;
     timeBar: TimeBar;
+    playing: boolean;
+    time: number;
+    startTime: number;
 
-    constructor(pos: Pos, size: Pos, p: p5, parent: Canvas, draggable = true) {
-        super(pos, size, p, parent, draggable);
+    constructor(pos: Pos, size: Pos, p: p5, parent: Capsule, draggable = true, speed = 10) {
+        super(pos, size, new Box(Pos.zero(), new Pos(controlBarHeight, size.y)), p, parent, draggable, speed);
         this.time = Transport.immediate();
         this.playables = [];
         this.controlBar = new ControlBar(new Pos(size.x, controlBarHeight), p, this);
-        this.controlBar.addButton('play', "../resource/img/play.png", () => {
-            this.play();
-        });
+        this.controlBar.addPlayButton(this);
         this.timeBar = new TimeBar(p, this);
+        this.playing = false;
     }
 
     draw(offset = Pos.zero()): void {
+        console.log(Transport.immediate());
         this.simpleRect(offset, canvasOutline, canvasColor);
         let off = Pos.sum(this.pos, offset);
         for (let playable of this.playables) {
             playable.draw(off);
         }
-        this.controlBar.draw(off);
         this.timeBar.draw(off);
-    }
-
-    play(): void {
-        throw new Error("Method not implemented.");
-    }
-
-    pause(): void {
-        throw new Error("Method not implemented.");
-    }
-
-    stop(): void {
-        throw new Error("Method not implemented.");
+        this.controlBar.draw(off);
+        if (this.playing) {
+            this.time = Transport.immediate();
+            this.timeBar.moveTo(new Pos((this.time-this.startTime) * this.speed, 0));
+        }
     }
 
     addSample(pos: Pos, sample: string, size = new Pos(30,30)): Sample {
@@ -138,7 +141,7 @@ export default class Canvas extends Element implements Playable {
     }
 
     addCanvas(pos: Pos): Canvas {
-        let canvas = new Canvas(pos, Pos.scale(this.size,0.3), this.p, this, true);
+        let canvas = new Canvas(pos, Pos.scale(this.size,0.3), this.p, this);
         this.playables.push(canvas);
         return canvas;
     }
@@ -170,20 +173,5 @@ export default class Canvas extends Element implements Playable {
         }
 
         return top;
-    }
-
-    moveTo(pos = Pos.zero()): void {
-        let newPos = pos.copy();
-        if (newPos.x <= 0) {
-            newPos.x = 0;
-        } else if (newPos.x + this.size.x >= this.parent.size.x) {
-            newPos.x = this.parent.size.x - this.size.x;
-        }
-        if (newPos.y <= controlBarHeight) {
-            newPos.y = controlBarHeight;
-        } else if (newPos.y + this.size.y >= this.parent.size.y) {
-            newPos.y = this.parent.size.y - this.size.y;
-        }
-        this.setPos(newPos);
     }
 }

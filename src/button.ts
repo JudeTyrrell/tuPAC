@@ -1,5 +1,5 @@
 import p5, { Image } from "p5";
-import { Element } from "./element";
+import { Capsule, Element } from "./element";
 import Pos from "./position";
 
 export default class Button extends Element {
@@ -7,7 +7,8 @@ export default class Button extends Element {
     fn: Function;
     name: string;
 
-    constructor(pos: Pos, size: Pos, p: p5, parent: Element, image: string, clicked: Function, name: string) {
+    // WARNING: At the moment, Button's elements are the Canvas containing the ControlBar, no the ControlBar itself. This may be desirable, I have yet to decide
+    constructor(pos: Pos, size: Pos, p: p5, parent: Capsule, image: string, clicked: Function, name: string) {
         super(pos, size, p, parent);
         this.img = p.loadImage(image);
         this.fn = clicked;
