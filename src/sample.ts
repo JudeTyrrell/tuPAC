@@ -51,7 +51,7 @@ export default class Sample extends Playable {
     }
 
     moveTo(pos: Pos): void {
-        let newBox = Box.within(this.parent.inner, new Box(pos, this.size));
+        let newBox = Box.within(new Box(pos, this.size), this.parent.inner);
         this.setPos(newBox.origin);
         this.schedule();
     }

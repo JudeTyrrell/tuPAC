@@ -1,5 +1,5 @@
 ﻿import p5 from "p5";
-import { Transport } from "tone";
+import * as Tone from "tone";
 import Pos, { Box } from "./position";
 
 export abstract class Element {
@@ -78,7 +78,7 @@ export abstract class Playable extends Element {
     abstract schedule(): void;
     unschedule(): void {
         if (this.scheduleId != null) {
-            Transport.clear(this.scheduleId);
+            Tone.Transport.clear(this.scheduleId);
             this.scheduleId = null;
         }
     }
@@ -96,18 +96,28 @@ export abstract class Capsule extends Playable {
     constructor(pos: Pos, size: Pos, inner: Box, p: p5, parent: Capsule, draggable = true, speed = 10) {
         super(pos, size, p, parent, draggable, speed);
         this.inner = inner;
+        this.playables = [];
+        this.playing = false;
+        this.updateStartTime();
     }
 
     updateStartTime(): void {
-        this.startTime = this.parent.startTime + (this.pos.x / this.parent.speed);
+        if (this.parent === null) {
+            this.startTime = 0;
+        } else {
+            this.startTime = this.parent.startTime + (this.pos.x / this.parent.speed);
+        }
         this.schedule();
     }
 
     play(master: boolean): void {
         this.playing = true;
+        console.log("Playing now, master: " + master + ", startTime: " + this.startTime);
         if (master) {
-            Transport.stop();
-            Transport.start(0, this.startTime);
+            Tone.Transport.debug = true;
+            Tone.Transport.stop();
+            Tone.Transport.seconds = this.startTime;
+            console.log("Time: " + Tone.Transport.now());
         }
     }
 
@@ -127,8 +137,8 @@ export abstract class Capsule extends Playable {
 
     schedule(): void {
         this.unschedule();
-        this.scheduleId = Transport.schedule((time) => {
-            if (this.parent.playing) {
+        this.scheduleId = Tone.Transport.schedule((time) => {
+            if (this.parent.playing || (this.parent === null)) {
                 this.play(false);
             }
         }, this.startTime);
@@ -138,14 +148,14 @@ export abstract class Capsule extends Playable {
     }
 
     unschedule(): void {
-        Transport.clear(this.scheduleId);
+        Tone.Transport.clear(this.scheduleId);
         for (let pb of this.playables) {
             pb.unschedule();
         }
     }
 
     moveTo(pos = Pos.zero()): void {
-        let newBox = Box.within(new Box(pos, this.size), this.inner);
+        let newBox = Box.within(new Box(pos, this.size), this.parent.inner);
         this.setPos(newBox.origin);
         this.updateStartTime();
     }

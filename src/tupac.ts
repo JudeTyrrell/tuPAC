@@ -2,6 +2,7 @@ import p5 from "p5";
 import Canvas from "./canvas";
 import { Element } from "./element";
 import Pos from "./position";
+import * as Tone from "tone";
 
 const winSizeX = 800;
 const winSizeY = 600;
@@ -14,7 +15,7 @@ const sketch = (p: p5) => {
 
     let inner = main.addCanvas(new Pos(100, 100));
     inner.setSpeed(50);
-    inner.addSample(Pos.zero(), "../resource/audio/ah.wav");
+    inner.addSample(new Pos(50,50), "../resource/audio/ah.wav");
 
     p.setup = () => {
         p.createCanvas(winSizeX, winSizeY);

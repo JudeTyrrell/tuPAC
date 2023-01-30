@@ -9,7 +9,7 @@ export default class Button extends Element {
 
     // WARNING: At the moment, Button's elements are the Canvas containing the ControlBar, no the ControlBar itself. This may be desirable, I have yet to decide
     constructor(pos: Pos, size: Pos, p: p5, parent: Capsule, image: string, clicked: Function, name: string) {
-        super(pos, size, p, parent);
+        super(pos, size, p, parent, false);
         this.img = p.loadImage(image);
         this.fn = clicked;
         this.name = name;
