@@ -46,6 +46,18 @@ export class ControlBar extends Element {
         });
     }
 
+    addStopButton(toStop: Playable) {
+        this.addButton('stop', "../resource/img/stop.png", () => {
+            toStop.stop(true);
+        });
+    }
+
+    addPauseButton(toPause: Playable) {
+        this.addButton('pause', "../resource/img/pause.png", () => {
+            toPause.pause(true);
+        });
+    }
+
     topUnderMouse(offset: Pos): Element {
         let top = null;
         let abs = Pos.sum(offset, this.pos);
@@ -55,9 +67,9 @@ export class ControlBar extends Element {
             let inner = null;
             for (let button of this.buttons) {
                 inner = button.topUnderMouse(offset);
-            }
-            if (inner != null) {
-                top = inner;
+                if (inner != null) {
+                    top = inner;
+                }
             }
         }
         return top;
@@ -66,10 +78,12 @@ export class ControlBar extends Element {
 
 export class TimeBar extends Element {
     prevX: number;
+    parent: Canvas;
 
     constructor(p: p5, parent: Canvas) {
         super(new Pos(parent.inner.origin.x, parent.controlBar.size.y), new Pos(timeBarThickness, parent.size.y - parent.controlBar.size.y), p, parent, true);
         this.prevX = 0;
+        this.parent = parent;
     }
 
     draw(offset: Pos): void {
@@ -104,43 +118,44 @@ export class TimeBar extends Element {
 export default class Canvas extends Capsule {
     controlBar: ControlBar;
     timeBar: TimeBar;
-    time: number;
-    startTime: number;
 
     constructor(pos: Pos, size: Pos, p: p5, parent: Capsule, draggable = true, speed = 10) {
         super(pos, size, new Box(new Pos(0, controlBarHeight), new Pos(size.x, size.y - controlBarHeight)), p, parent, draggable, speed);
-        this.time = Tone.Transport.immediate();
         this.playables = [];
         this.controlBar = new ControlBar(new Pos(size.x, controlBarHeight), p, this);
         this.controlBar.addPlayButton(this);
+        this.controlBar.addStopButton(this);
+        this.controlBar.addPauseButton(this);
         this.timeBar = new TimeBar(p, this);
     }
 
     draw(offset = Pos.zero()): void {
         this.simpleRect(offset, canvasOutline, canvasColor);
         let off = Pos.sum(this.pos, offset);
-        for (let playable of this.playables) {
-            playable.draw(off);
-        }
         this.timeBar.draw(off);
         this.controlBar.draw(off);
         if (this.playing) {
-            this.time = Tone.Transport.immediate();
-            this.timeBar.moveTo(new Pos((this.time-this.startTime) * this.speed, 0));
+            this.currentTime = Tone.getTransport().seconds;
+            this.timeBar.moveTo(new Pos((this.currentTime - this.startTime) * this.speed, 0));
+        }
+        if (Tone.getTransport().state != "started") {
+            this.stop(false);
+        }
+         for (let playable of this.playables) {
+            playable.draw(off);
         }
     }
+
 
     addSample(pos: Pos, sample: string, size = new Pos(30,30)): Sample {
         let samp = new Sample(pos, size, this.p, this, sample);
         this.playables.push(samp);
-        samp.schedule();
         return samp;
     }
 
     addCanvas(pos: Pos): Canvas {
         let canvas = new Canvas(pos, Pos.scale(this.size, 0.3), this.p, this);
         this.playables.push(canvas);
-        canvas.schedule();
         return canvas;
     }
 
@@ -164,10 +179,10 @@ export default class Canvas extends Capsule {
             let inner = null;
             for (let element of this.playables) {
                 inner = element.topUnderMouse(abs);
+                if (inner != null) {
+                    top = inner;
+                }
             } 
-            if (inner != null) {
-                top = inner;
-            }
         }
 
         return top;

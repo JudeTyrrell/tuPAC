@@ -15,7 +15,11 @@ const sketch = (p: p5) => {
 
     let inner = main.addCanvas(new Pos(100, 100));
     inner.setSpeed(50);
-    inner.addSample(new Pos(50,50), "../resource/audio/ah.wav");
+    inner.addSample(new Pos(50, 50), "../resource/audio/ah.wav");
+
+    inner = main.addCanvas(new Pos(200, 200));
+    inner.setSpeed(50);
+    inner.addSample(new Pos(50, 50), "../resource/audio/ah.wav");
 
     p.setup = () => {
         p.createCanvas(winSizeX, winSizeY);

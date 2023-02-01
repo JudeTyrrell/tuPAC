@@ -8,16 +8,14 @@ export abstract class Element {
     size: Pos;
     draggable: boolean;
     p: p5;
-    parent: Capsule;
-    speed: number; // (playback speed) Measured in pixels/second
-
-    constructor(pos: Pos, size: Pos, p: p5, parent: Capsule, draggable = false, speed = 10) {
+    parent?: Element;
+    
+    constructor(pos: Pos, size: Pos, p: p5, parent: Element, draggable = false) {
         this.pos = pos;
         this.size = size;
         this.draggable = draggable;
         this.p = p;
         this.parent = parent;
-        this.speed = speed;
     }
 
     clicked(): void {}
@@ -46,11 +44,6 @@ export abstract class Element {
         this.pos = pos;
     }
 
-
-    setSpeed(speed: number): void {
-        this.speed = speed;
-    }
-
     move(dist: Pos): Pos {
         return this.pos.add(dist);
     }
@@ -72,15 +65,22 @@ export abstract class Element {
 export abstract class Playable extends Element {
     playing: boolean;
     scheduleId: number;
+    speed: number; // (playback speed) Measured in pixels/second
+    parent: Capsule;
+    currentTime: number;
     abstract play(master: boolean): void;
-    abstract pause(): void;
-    abstract stop(): void;
+    abstract pause(master: boolean): void;
+    abstract stop(master: boolean): void;
     abstract schedule(): void;
     unschedule(): void {
         if (this.scheduleId != null) {
             Tone.Transport.clear(this.scheduleId);
             this.scheduleId = null;
         }
+    }
+
+    setSpeed(speed: number): void {
+        this.speed = speed;
     }
 }
 
@@ -93,45 +93,65 @@ export abstract class Capsule extends Playable {
     // Where inner elements can be moved to
     inner: Box;
 
-    constructor(pos: Pos, size: Pos, inner: Box, p: p5, parent: Capsule, draggable = true, speed = 10) {
-        super(pos, size, p, parent, draggable, speed);
+    constructor(pos: Pos, size: Pos, inner: Box, p: p5, parent: Capsule, draggable = true, speed = 20) {
+        super(pos, size, p, parent, draggable);
         this.inner = inner;
         this.playables = [];
+        this.speed = speed;
         this.playing = false;
         this.updateStartTime();
+        this.currentTime = this.startTime;
     }
 
     updateStartTime(): void {
         if (this.parent === null) {
-            this.startTime = 0;
+            // This is really dumb, has to be arbitrarily small because Tone.js won't let us set it to 0.
+            this.startTime = 0.001;
         } else {
             this.startTime = this.parent.startTime + (this.pos.x / this.parent.speed);
         }
         this.schedule();
     }
 
-    play(master: boolean): void {
-        this.playing = true;
-        console.log("Playing now, master: " + master + ", startTime: " + this.startTime);
+    play(master: boolean) {
+        if (this.parent === null) {
+            this.playing = true;
+        } else if (this.parent.playing || master) {
+            this.playing = true;
+        }
+        console.log("Playing now, master: " + master + ", Start Time: " + this.currentTime);
         if (master) {
-            Tone.Transport.debug = true;
-            Tone.Transport.stop();
-            Tone.Transport.seconds = this.startTime;
-            console.log("Time: " + Tone.Transport.now());
+            console.log(Tone.getTransport().seconds);
+            Tone.getTransport().stop(0);
+            Tone.getTransport().seconds = this.currentTime;
+            Tone.getTransport().start(0);
         }
     }
 
-    pause(): void {
-        this.playing = false;
-        for (let playable of this.playables) {
-            playable.pause();
+    pause(master: boolean): void {
+        if (this.playing) {
+            this.playing = false;
+            for (let playable of this.playables) {
+                playable.pause(false);
+            }
+            if (master) {
+                Tone.getTransport().pause();
+                this.currentTime = Tone.getTransport().seconds;
+            }
         }
     }
 
-    stop(): void {
-        this.playing = false;
-        for (let playable of this.playables) {
-            playable.stop();
+    stop(master: boolean): void {
+        if (this.playing) {
+            this.playing = false;
+            for (let playable of this.playables) {
+                playable.stop(false);
+            }
+            if (master) {
+                Tone.getTransport().stop(0);
+                Tone.getTransport().seconds = this.startTime;
+                this.currentTime = this.startTime;
+            } 
         }
     }
 
