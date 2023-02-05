@@ -4,7 +4,6 @@ import * as Tone from "tone";
 import Pos, { Box } from "./position";
 import Sample from "./sample";
 import Button from "./button";
-
 export const canvasColor = "#77b7bb";
 export const canvasOutline = "#314814";
 export const controlBarHeight = 30;
@@ -21,13 +20,15 @@ export const buttonSize = 20;
 export class ControlBar extends Element {
     buttons: Button[];
 
-    constructor(size: Pos, p: p5, parent: Capsule) {
+    constructor(size: Pos, p: p5, parent: Element) {
         super(Pos.zero(), size, p, parent, false);
         this.buttons = [];
     }
 
-    draw(offset: Pos) {
-        this.simpleRect(offset, null, controlBarColor);
+    draw(offset: Pos, alpha = 255) {
+        let color = this.p.color(controlBarColor);
+        color.setAlpha(alpha);
+        this.simpleRect(offset, null, color);
         for (let button of this.buttons) {
             button.draw(offset);
         }
@@ -58,15 +59,15 @@ export class ControlBar extends Element {
         });
     }
 
-    topUnderMouse(offset: Pos): Element {
+    topUnderPos(offset: Pos, pos: Pos) {
         let top = null;
         let abs = Pos.sum(offset, this.pos);
 
-        if (Pos.inBox(abs, this.size, this.mPos())) {
+        if (Pos.inBox(abs, this.size, pos)) {
             top = this.parent;
             let inner = null;
             for (let button of this.buttons) {
-                inner = button.topUnderMouse(offset);
+                inner = button.topUnderPos(offset, pos);
                 if (inner != null) {
                     top = inner;
                 }
@@ -86,16 +87,18 @@ export class TimeBar extends Element {
         this.parent = parent;
     }
 
-    draw(offset: Pos): void {
-        this.simpleRect(offset, null, timeBarColor);
+    draw(offset: Pos, alpha = 255): void {
+        let color = this.p.color(timeBarColor);
+        color.setAlpha(alpha);
+        this.simpleRect(offset, null, color);
     }
 
-    topUnderMouse(offset: Pos): Element {
+    topUnderPos(offset: Pos, pos: Pos) {
         let abs = Pos.sum(this.pos, offset);
         let capt = new Pos(this.size.x + (timeBarLenience * 2) + timeBarThickness, this.size.y);
-        abs.add(new Pos(-timeBarLenience-timeBarThickness/2, 0));
+        abs.add(new Pos(-timeBarLenience - timeBarThickness / 2, 0));
 
-        if (Pos.inBox(abs, capt, this.mPos())) {
+        if (Pos.inBox(abs, capt, pos)) {
             return this;
         }
 
@@ -129,8 +132,12 @@ export default class Canvas extends Capsule {
         this.timeBar = new TimeBar(p, this);
     }
 
-    draw(offset = Pos.zero()): void {
-        this.simpleRect(offset, canvasOutline, canvasColor);
+    draw(offset = Pos.zero(), alpha = 255): void {
+        let scolor = this.p.color(canvasOutline);
+        scolor.setAlpha(alpha);
+        let fcolor = this.p.color(canvasColor);
+        fcolor.setAlpha(alpha);
+        this.simpleRect(offset, scolor, fcolor);
         let off = Pos.sum(this.pos, offset);
         this.timeBar.draw(off);
         this.controlBar.draw(off);
@@ -159,16 +166,14 @@ export default class Canvas extends Capsule {
         return canvas;
     }
 
-    // Returns the Element directly under the mouse. By looping through the elements array and replacing any previous 
-    // values with elements further in the array, we will return the Element that the mouse is within the range of which is also drawn last.
-    topUnderMouse(offset = Pos.zero()): Element {
+    topUnderPos(offset: Pos, pos: Pos): Element {
         let top = null;
         let abs = Pos.sum(this.pos, offset);
 
-        if (Pos.inBox(abs, this.size, this.mPos())) {
+        if (Pos.inBox(abs, this.size, pos)) {
             top = this;
-            let controlBar = this.controlBar.topUnderMouse(abs);
-            let timeBar = this.timeBar.topUnderMouse(abs);
+            let controlBar = this.controlBar.topUnderPos(abs, pos);
+            let timeBar = this.timeBar.topUnderPos(abs, pos);
 
             if (controlBar != null) {
                 top = controlBar;
@@ -178,11 +183,11 @@ export default class Canvas extends Capsule {
             }
             let inner = null;
             for (let element of this.playables) {
-                inner = element.topUnderMouse(abs);
+                inner = element.topUnderPos(abs, pos);
                 if (inner != null) {
                     top = inner;
                 }
-            } 
+            }
         }
 
         return top;

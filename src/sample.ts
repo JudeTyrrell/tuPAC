@@ -14,7 +14,9 @@ export default class Sample extends Playable {
         super(pos, size, p, parent, true);
         this.player = new Player(sample).toDestination();
         this.currentTime = 0;
-        this.schedule();
+        if (parent != null) {
+            this.schedule();
+        }
     }
 
     play(master = false): void {
@@ -40,12 +42,14 @@ export default class Sample extends Playable {
         }, this.parent.startTime + (this.pos.x / this.parent.speed));
     }
 
-    draw(offset: Pos): void {
-        this.simpleRect(offset, sampleOutline, null);
+    draw(offset: Pos, alpha = 255): void {
+        let stroke = this.p.color(sampleOutline);
+        stroke.setAlpha(alpha);
+        this.simpleRect(offset, stroke, null);
     }
 
-    topUnderMouse(offset: Pos): Sample {
-        if (Pos.inBox(Pos.sum(this.pos, offset), this.size, this.mPos())) {
+    topUnderPos(offset: Pos, pos: Pos): Sample {
+        if (Pos.inBox(Pos.sum(this.pos, offset), this.size, pos)) {
             return this;
         }
         return null;

@@ -1,4 +1,4 @@
-﻿import p5 from "p5";
+﻿import p5, { Color } from "p5";
 import * as Tone from "tone";
 import Pos, { Box } from "./position";
 
@@ -19,8 +19,12 @@ export abstract class Element {
     }
 
     clicked(): void {}
+    drop(onto: Element): void {}
 
-    simpleRect(offset: Pos, stroke: string, fill: string): void {
+    simpleRect(offset: Pos, stroke: Color, fill: Color): void {
+        /** 
+         *  Draws a simple rectangle the size of the Element that calls it.
+         */
         if (stroke === null) {
             this.p.noStroke();
         } else {
@@ -34,7 +38,7 @@ export abstract class Element {
         this.p.rect(this.pos.x + offset.x, this.pos.y + offset.y, this.size.x, this.size.y);
     }
 
-    rect(o: Pos, size: Pos, stroke: string) {
+    rect(o: Pos, size: Pos, stroke: Color) {
         this.p.stroke(stroke);
         this.p.noFill();
         this.p.rect(o.x, o.y, size.x, size.y);
@@ -57,9 +61,20 @@ export abstract class Element {
         return new Pos(this.p.winMouseX, this.p.winMouseY);
     }
 
-    abstract draw(offset: Pos): void;
+    abstract draw(offset: Pos, alpha?: number): void;
 
-    abstract topUnderMouse(offset: Pos): Element;
+    topUnderMouse(offset: Pos): Element {
+        return this.topUnderPos(offset, this.mPos());
+    };
+
+    topUnderPos(offset: any, pos: Pos): any {
+        let abs = Pos.sum(this.pos, offset);
+        if (Pos.inBox(abs, this.size, this.mPos())) {
+            return this;
+        } else {
+            return null;
+        }
+    }
 }
 
 export abstract class Playable extends Element {
@@ -101,6 +116,10 @@ export abstract class Capsule extends Playable {
         this.playing = false;
         this.updateStartTime();
         this.currentTime = this.startTime;
+    }
+
+    add(playable: Playable): void {
+        this.playables.push(playable);
     }
 
     updateStartTime(): void {

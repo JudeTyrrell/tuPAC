@@ -13,6 +13,12 @@ export default class Pos {
         return this;
     }
 
+    sub(a: Pos): Pos {
+        this.x -= a.x;
+        this.y -= a.y;
+        return this;
+    }
+
     copy(): Pos {
         return new Pos(this.x, this.y);
     }
