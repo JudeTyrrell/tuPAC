@@ -3,8 +3,8 @@ import p5 from "p5";
 import * as Tone from "tone";
 import Pos, { Box } from "./position";
 import Sample from "./sample";
-import { ControlBar } from "./ControlBar";
-import { TimeBar } from "./TimeBar";
+import { ControlBar } from "./controlbar";
+import { TimeBar } from "./timebar";
 export const canvasColor = "#77b7bb";
 export const canvasOutline = "#314814";
 export const canvasDefaultSize = new Pos(200, 150);
@@ -39,19 +39,19 @@ export default class Canvas extends Capsule {
         let fcolor = this.p.color(canvasColor);
         fcolor.setAlpha(alpha);
         this.simpleRect(offset, scolor, fcolor);
+
         let off = Pos.sum(this.pos, offset);
         this.timeBar.draw(off);
         this.controlBar.draw(off);
         if (this.playing) {
-            this.currentTime = Tone.getTransport().seconds;
-            this.timeBar.setPos(new Pos(this.inner.origin.x + (this.currentTime - this.startTime) * this.speed, this.inner.origin.y));
+            this.timeBar.setPos(new Pos(this.inner.origin.x + ((Tone.getTransport().seconds - this.startTime) * this.speed), this.inner.origin.y));
             if (this.timeBar.pos.x > this.size.x) {
                 this.stop(false);
                 this.timeBar.pos.x = this.size.x - 2;
             }
-        }
-        if (Tone.getTransport().state != "started") {
-            this.stop(false);
+            if (Tone.getTransport().state != "started") {
+                this.pause(false);
+            }
         }
          for (let playable of this.playables) {
             playable.draw(off);

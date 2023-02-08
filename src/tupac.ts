@@ -65,7 +65,7 @@ const sketch = (p: p5) => {
 
     p.mouseReleased = () => {
         let top = main.topUnderMouse();
-        if (typeof top['inner'] != 'undefined' && typeof held['element'] != 'undefined') {
+        if (held != null && typeof top['inner'] != 'undefined' && typeof held['element'] != 'undefined') {
             held.drop(top);
         }
         held = null;

@@ -51,7 +51,7 @@ export default class Window {
             relative.sub(parent.pos);
             parent = parent.parent;
         }
-        console.log("Absolute: "+ abs + "Relative: " + relative);
+        //console.log("Absolute: "+ abs + "Relative: " + relative);
         return relative;
     }
 
@@ -72,7 +72,7 @@ export default class Window {
                 }
             }
         }
-        console.log(top);
+        //console.log(top);
         return top;
     }
 }

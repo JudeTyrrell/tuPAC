@@ -33,15 +33,17 @@ export class TimeBar extends Element {
     }
 
     moveTo(pos: Pos): void {
-        let newPos = pos.copy();
-        newPos.y = this.pos.y;
-        if (newPos.x <= 0) {
-            newPos.x = 0;
-        } else if (newPos.x + this.size.x >= this.parent.size.x) {
-            newPos.x = this.parent.size.x - this.size.x;
+        if (!this.parent.playing) {
+            let newPos = pos.copy();
+            newPos.y = this.pos.y;
+            if (newPos.x <= 0) {
+                newPos.x = 0;
+            } else if (newPos.x + this.size.x >= this.parent.size.x) {
+                newPos.x = this.parent.size.x - this.size.x;
+            }
+            this.prevX = this.pos.x;
+            this.parent.pauseTime = newPos.x / this.parent.speed;
+            this.setPos(newPos);
         }
-        this.prevX = this.pos.x;
-        this.parent.currentTime = newPos.x / this.parent.speed;
-        this.setPos(newPos);
     }
 }

@@ -25,6 +25,7 @@ export default class Button extends Element {
     }
 
     async clicked() {
+        console.log(this.name);
         await this.fn();
     }
 }

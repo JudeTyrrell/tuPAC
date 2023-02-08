@@ -15,18 +15,18 @@ export default class Sample extends Playable {
     constructor(pos: Pos, size: Pos, p: p5, parent: Capsule, sample: string) {
         super(pos, size, p, parent, true);
         this.player = new Player(sample).toDestination();
-        this.currentTime = 0;
+        this.pauseTime = 0;
         this.updateStartTime();
         this.icon = new Icon(pos, size, p, this);
     }
 
     play(master = false): void {
-        this.player.start(0, this.currentTime);
+        this.player.start(0, this.pauseTime - this.startTime);
         console.log("Playing sample at:" + Tone.getTransport().seconds);
     }
 
     pause(master = false): void {
-        this.currentTime = this.player.sampleTime;
+        this.pauseTime = this.player.sampleTime;
         this.player.stop();
     }
 
@@ -39,7 +39,7 @@ export default class Sample extends Playable {
         this.scheduleId = Tone.Transport.schedule((time) => {
             if (this.parent.playing) {
                 this.play();
-                this.currentTime = 0;
+                this.pauseTime = 0;
             }
         }, this.startTime);
     }

@@ -92,7 +92,8 @@ export abstract class Playable extends Element {
     parent: Capsule;
     // Measure in seconds
     startTime: number;
-    currentTime: number;
+    pauseTime: number;
+
     abstract play(master: boolean): void;
     abstract pause(master: boolean): void;
     abstract stop(master: boolean): void;
@@ -104,9 +105,10 @@ export abstract class Playable extends Element {
             this.startTime = 0.0001;
         } else {
             this.startTime = this.parent.startTime + (this.pos.x / this.parent.speed);
+            this.schedule();
         }
-        this.currentTime = this.startTime;
-        this.schedule();
+        this.pauseTime = this.startTime;
+        console.log("Updated start time: " + this.startTime + " for " + this);
     }
 
     unschedule(): void {
@@ -135,7 +137,6 @@ export abstract class Capsule extends Playable {
         this.speed = speed;
         this.playing = false;
         this.updateStartTime();
-        this.currentTime = this.startTime;
     }
     
     //resize(size: Pos) {
@@ -145,26 +146,28 @@ export abstract class Capsule extends Playable {
     add(playable: Playable): Playable {
         playable.parent = this;
         playable.updateStartTime();
-        playable.currentTime = playable.startTime;
         //this.resize(Pos.maxXY(Pos.sum(playable.pos, playable.size), this.size));
         this.playables.push(playable);
         return playable;
     }
 
     play(master: boolean) {
-        if (this.parent === null) {
-            this.playing = true;
-        } else if (this.parent.playing || master) {
-            this.playing = true;
-        }
-        console.log("Playing now, master: " + master + ", Start Time: " + this.currentTime);
+        console.log("Playing now, master: " + master + ", Start Time: " + this.pauseTime);
         if (master) {
-            if (Tone.getTransport().state === 'started') {
-                Tone.getTransport().stop(0);
-            }
             console.log(Tone.getTransport().seconds);
-            Tone.getTransport().seconds = this.currentTime;
-            Tone.getTransport().start(0);
+            if (Tone.getTransport().state != 'started') {
+                Tone.getTransport().stop(0);
+                Tone.getTransport().seconds = this.pauseTime;
+                Tone.getTransport().start(0);
+                console.log("Starting Transport at: "+this.pauseTime);
+            }
+            this.playing = true;
+        } else {
+            if (this.parent != null) {
+                if (this.parent.playing) {
+                    this.playing = true;
+                }
+            }
         }
     }
 
@@ -175,9 +178,10 @@ export abstract class Capsule extends Playable {
                 playable.pause(false);
             }
             if (master) {
-                Tone.getTransport().pause(0);
-                this.currentTime = Tone.getTransport().seconds;
+                Tone.getTransport().pause();
             }
+            this.pauseTime = Tone.getTransport().seconds;
+            console.log("Paused, set pauseTime to:" + this.pauseTime);
         }
     }
 
@@ -189,9 +193,9 @@ export abstract class Capsule extends Playable {
             }
             if (master) {
                 Tone.getTransport().stop(0);
-                Tone.getTransport().seconds = this.startTime;
-                this.currentTime = this.startTime;
             } 
+            this.pauseTime = this.startTime;
+            console.log("Stopped, set pauseTime to:" + this.startTime);
         }
     }
 
