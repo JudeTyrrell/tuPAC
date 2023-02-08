@@ -1,30 +1,27 @@
 import p5, { Image } from "p5";
 import { Capsule, Element } from "./element";
 import Pos from "./position";
+import Icon from "./icon";
 
 export default class Button extends Element {
-    img: Image;
+    icon: Icon;
     fn: Function;
     name: string;
 
     constructor(pos: Pos, size: Pos, p: p5, parent: Element, image: string, clicked: Function, name: string) {
         super(pos, size, p, parent, false);
-        this.img = p.loadImage(image);
+        this.icon = new Icon(pos, size, p, this);
+        this.icon.loadImage(image);
         this.fn = clicked;
         this.name = name;
     }
 
-    draw(offset: Pos): void {
-        let off = Pos.sum(this.pos, offset);
-        this.p.image(this.img, off.x, off.y, this.size.x, this.size.y);
+    draw(offset: Pos, alpha = 255): void {
+        this.icon.draw(offset, alpha);
     }
 
-    topUnderMouse(offset: Pos): Element {
-        let abs = Pos.sum(this.pos, offset);
-        if (Pos.inBox(abs, this.size, this.mPos())) {
-            return this;
-        }
-        return null;
+    topUnderPos(offset: Pos, pos: Pos): Element {
+        return this.icon.topUnderPos(offset, pos);
     }
 
     async clicked() {

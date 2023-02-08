@@ -31,6 +31,19 @@ export default class Pos {
         return new Pos(a.x + b.x, a.y + b.y);
     }
 
+    static maxXY(a: Pos, b: Pos): Pos {
+        let x = Pos.max(a.x, b.x);
+        let y = Pos.max(a.y,b.y);
+        return new Pos(x,y);
+    }
+
+    static max(a: number, b: number): number {
+        if (a > b) {
+            return a;
+        }
+        return b;
+    }
+
     static diff(a: Pos, b: Pos): Pos {
         return new Pos(a.x - b.x, a.y - b.y);
     }

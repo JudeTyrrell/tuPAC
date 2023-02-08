@@ -1,6 +1,7 @@
 ﻿import p5, { Color } from "p5";
 import * as Tone from "tone";
 import Pos, { Box } from "./position";
+import { theWindow } from "tone/build/esm/core/context/AudioContext";
 
 export abstract class Element {
     // pos = (x,y) are co-ordinates respective to the encapsulating Canvas' top-left corner, as is p5.js convention. x increases to the right, y increases down.
@@ -44,6 +45,13 @@ export abstract class Element {
         this.p.rect(o.x, o.y, size.x, size.y);
     }
 
+    label(o: Pos, height: number, color: Color, text: string) {
+        this.p.fill(color);
+        this.p.textAlign('center');
+        this.p.textSize(height);
+        this.p.text(text, o.x, o.y);
+    }
+
     setPos(pos: Pos): void {
         this.pos = pos;
     }
@@ -82,11 +90,25 @@ export abstract class Playable extends Element {
     scheduleId: number;
     speed: number; // (playback speed) Measured in pixels/second
     parent: Capsule;
+    // Measure in seconds
+    startTime: number;
     currentTime: number;
     abstract play(master: boolean): void;
     abstract pause(master: boolean): void;
     abstract stop(master: boolean): void;
     abstract schedule(): void;
+
+    updateStartTime(): void {
+        if (this.parent === null) {
+            // This is really dumb, has to be arbitrarily small because Tone.js won't let us set it to 0.
+            this.startTime = 0.0001;
+        } else {
+            this.startTime = this.parent.startTime + (this.pos.x / this.parent.speed);
+        }
+        this.currentTime = this.startTime;
+        this.schedule();
+    }
+
     unschedule(): void {
         if (this.scheduleId != null) {
             Tone.Transport.clear(this.scheduleId);
@@ -100,8 +122,6 @@ export abstract class Playable extends Element {
 }
 
 export abstract class Capsule extends Playable {
-    // Measure in seconds
-    startTime: number;
     // Array of elements on this Canvas. Elements are drawn in order of increasing index, and so the later an element's index in this array, the closer to the 'top' it is.
     playables: Playable[];
     playing: boolean;
@@ -117,19 +137,18 @@ export abstract class Capsule extends Playable {
         this.updateStartTime();
         this.currentTime = this.startTime;
     }
+    
+    //resize(size: Pos) {
+      //  this.size = size;
+    //}
 
-    add(playable: Playable): void {
+    add(playable: Playable): Playable {
+        playable.parent = this;
+        playable.updateStartTime();
+        playable.currentTime = playable.startTime;
+        //this.resize(Pos.maxXY(Pos.sum(playable.pos, playable.size), this.size));
         this.playables.push(playable);
-    }
-
-    updateStartTime(): void {
-        if (this.parent === null) {
-            // This is really dumb, has to be arbitrarily small because Tone.js won't let us set it to 0.
-            this.startTime = 0.001;
-        } else {
-            this.startTime = this.parent.startTime + (this.pos.x / this.parent.speed);
-        }
-        this.schedule();
+        return playable;
     }
 
     play(master: boolean) {
@@ -140,8 +159,10 @@ export abstract class Capsule extends Playable {
         }
         console.log("Playing now, master: " + master + ", Start Time: " + this.currentTime);
         if (master) {
+            if (Tone.getTransport().state === 'started') {
+                Tone.getTransport().stop(0);
+            }
             console.log(Tone.getTransport().seconds);
-            Tone.getTransport().stop(0);
             Tone.getTransport().seconds = this.currentTime;
             Tone.getTransport().start(0);
         }
@@ -154,7 +175,7 @@ export abstract class Capsule extends Playable {
                 playable.pause(false);
             }
             if (master) {
-                Tone.getTransport().pause();
+                Tone.getTransport().pause(0);
                 this.currentTime = Tone.getTransport().seconds;
             }
         }
@@ -177,7 +198,7 @@ export abstract class Capsule extends Playable {
     schedule(): void {
         this.unschedule();
         this.scheduleId = Tone.Transport.schedule((time) => {
-            if (this.parent.playing || (this.parent === null)) {
+            if ((this.parent === null) || this.parent.playing) {
                 this.play(false);
             }
         }, this.startTime);

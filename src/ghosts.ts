@@ -14,14 +14,12 @@ export class Ghost extends Element {
     }
 
     draw(offset: Pos) {
-        this.element.draw(offset, 125)
+        this.element.draw(offset, 125);
         this.element.pos = this.pos;
-    };
+    }
 
     drop(onto: Capsule): void {
         onto.add(this.element);
-        this.element.parent = onto;
-        this.element.pos = this.window.toRelative(this.pos);
-        this.element.schedule();
+        this.element.moveTo(this.window.toRelative(this.pos, onto));
     }
 }

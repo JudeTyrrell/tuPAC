@@ -1,8 +1,8 @@
 import Pos from "./position";
-import { Element } from "./element";
+import { Capsule, Element } from "./element";
 import Canvas from "./canvas";
 import p5 from "p5";
-import FileExplorer from "./fileExplorer";
+import FileExplorer, { ElementMenu } from "./fileExplorer";
 
 export default class Window {
     elements: Element[];
@@ -27,6 +27,12 @@ export default class Window {
         return fe;
     }
 
+    addElementMenu(pos: Pos, size: Pos): ElementMenu {
+        let em = new ElementMenu(pos, size, this.p, this);
+        this.elements.push(em);
+        return em;
+    }
+
     draw() {
         for (let element of this.elements) {
             element.draw(Pos.zero());
@@ -37,15 +43,15 @@ export default class Window {
         return new Pos(this.p.winMouseX, this.p.winMouseY);
     }
 
-    toRelative(abs: Pos): Pos {
-        let top = this.topUnderPos(Pos.zero(), abs);
+    toRelative(abs: Pos, capsule: Capsule): Pos {
+        let top = capsule;
         let relative = abs.copy().sub(top.pos);
         let parent = top.parent;
         while (parent != null) {
             relative.sub(parent.pos);
             parent = parent.parent;
         }
-        console.log(relative);
+        console.log("Absolute: "+ abs + "Relative: " + relative);
         return relative;
     }
 
