@@ -16,7 +16,6 @@ export default class Sample extends Playable {
         super(pos, size, p, parent, true);
         this.player = new Player(sample).toDestination();
         this.pauseTime = 0;
-        this.updateStartTime();
         this.icon = new Icon(pos, size, p, this);
     }
 

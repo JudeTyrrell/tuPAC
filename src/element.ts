@@ -1,20 +1,21 @@
 ﻿import p5, { Color } from "p5";
 import * as Tone from "tone";
 import Pos, { Box } from "./position";
-import { theWindow } from "tone/build/esm/core/context/AudioContext";
 
 export abstract class Element {
     // pos = (x,y) are co-ordinates respective to the encapsulating Canvas' top-left corner, as is p5.js convention. x increases to the right, y increases down.
     pos: Pos;
     size: Pos;
     draggable: boolean;
+    resizable: boolean;
     p: p5;
     parent?: Element;
     
-    constructor(pos: Pos, size: Pos, p: p5, parent: Element, draggable = false) {
+    constructor(pos: Pos, size: Pos, p: p5, parent: Element, draggable = false, resizable = false) {
         this.pos = pos;
         this.size = size;
         this.draggable = draggable;
+        this.resizable = resizable;
         this.p = p;
         this.parent = parent;
     }
@@ -37,6 +38,21 @@ export abstract class Element {
             this.p.fill(fill);
         }
         this.p.rect(this.pos.x + offset.x, this.pos.y + offset.y, this.size.x, this.size.y);
+    }
+
+    resize(change: Pos): Pos {
+        this.size = Pos.sum(this.size, change);
+        return this.size;
+    }
+
+    getAbsolutePos(): Pos {
+        let p = this.parent;
+        let pos = this.pos;
+        while (p != null) {
+            pos = Pos.sum(pos, p.pos);
+            p = p.parent;
+        }
+        return pos;
     }
 
     rect(o: Pos, size: Pos, stroke: Color) {
@@ -130,18 +146,25 @@ export abstract class Capsule extends Playable {
     // Where inner elements can be moved to
     inner: Box;
 
-    constructor(pos: Pos, size: Pos, inner: Box, p: p5, parent: Capsule, draggable = true, speed = 20) {
-        super(pos, size, p, parent, draggable);
+    constructor(pos: Pos, size: Pos, inner: Box, p: p5, parent: Capsule, draggable = true, resizable = true, speed = 20) {
+        super(pos, size, p, parent, draggable, resizable);
         this.inner = inner;
         this.playables = [];
         this.speed = speed;
         this.playing = false;
-        this.updateStartTime();
     }
     
-    //resize(size: Pos) {
-      //  this.size = size;
-    //}
+    resize(change: Pos) : Pos {
+        let newSize = Pos.sum(this.size, change);
+        if (Box.within(new Box(this.pos, newSize), this.parent.inner)) {
+            this.size = newSize;
+            this.inner.size = Pos.sum(this.inner.size, change);
+            this.updateStartTime();
+            return newSize;
+        } else{ 
+            throw new Error("Can't resize to: "+newSize+", doesn't fit!");
+        }
+    }
 
     add(playable: Playable): Playable {
         playable.parent = this;
@@ -179,8 +202,8 @@ export abstract class Capsule extends Playable {
             }
             if (master) {
                 Tone.getTransport().pause();
+                this.pauseTime = Tone.getTransport().seconds;
             }
-            this.pauseTime = Tone.getTransport().seconds;
             console.log("Paused, set pauseTime to:" + this.pauseTime);
         }
     }

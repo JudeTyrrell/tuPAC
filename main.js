@@ -6,6 +6,7 @@ const createWindow = () => {
         height: 1000,
         webPreferences: {
             nodeIntegration: true,
+            enableRemoteModule: true,
             contextIsolation: false
         }
     });

@@ -24,13 +24,30 @@ export default class Canvas extends Capsule {
     timeBar: TimeBar;
 
     constructor(pos: Pos, size: Pos, p: p5, parent: Capsule, draggable = true, speed = 50) {
-        super(pos, size, new Box(new Pos(0, controlBarHeight), new Pos(size.x, size.y - controlBarHeight)), p, parent, draggable, speed);
+        super(pos, size, new Box(new Pos(0, controlBarHeight), new Pos(size.x, size.y - controlBarHeight)), p, parent, draggable, true, speed);
         this.playables = [];
         this.controlBar = new ControlBar(new Pos(size.x, controlBarHeight), p, this);
         this.controlBar.addPlayButton(this);
         this.controlBar.addStopButton(this);
         this.controlBar.addPauseButton(this);
+        if (parent === null) { // We want to leave the initial start time nudge to the parent, but must do it straight away if no parent exists.
+            this.updateStartTime();
+        }
         this.timeBar = new TimeBar(p, this);
+    }
+
+    resize(change: Pos) : Pos {
+        let newSize = Pos.sum(this.size, change);
+        if (Box.within(new Box(this.pos, newSize), this.parent.inner)) {
+            this.size = newSize;
+            this.inner.size = Pos.sum(this.inner.size, change);
+            this.controlBar.size.x += change.x;
+            this.timeBar.size.y += change.y;
+            this.updateStartTime();
+            return newSize;
+        } else{ 
+            throw new Error("Can't resize to: "+newSize+", doesn't fit!");
+        }
     }
 
     draw(offset = Pos.zero(), alpha = 255): void {
@@ -60,13 +77,14 @@ export default class Canvas extends Capsule {
 
     addSample(pos: Pos, sample: string, size = new Pos(30,30)): Sample {
         let samp = new Sample(pos, size, this.p, this, sample);
-        this.playables.push(samp);
+        this.add(samp);
         return samp;
     }
 
-    newCanvas(pos: Pos, size = canvasDefaultSize): Playable {
-        let canvas = new Canvas(pos, size, this.p, this);
-        return this.add(canvas);
+    newCanvas(pos: Pos, size = canvasDefaultSize): Canvas {
+        let canvas = new Canvas(pos, size, this.p, this, true);
+        this.add(canvas)
+        return canvas;
     }
 
     topUnderPos(offset: Pos, pos: Pos): Element {

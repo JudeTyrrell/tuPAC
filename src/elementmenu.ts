@@ -5,8 +5,10 @@ import Window from "./window";
 import { Ghost } from "./ghosts";
 import Pos from "./position";
 import Sample from "./sample";
-import Icon from "./icon";
+import Icon, { Icons } from "./icon";
 import Canvas from './canvas';
+import { ControlBar } from "./controlbar";
+import { dialog } from "electron";
 
 const FileExplorerBgColor = "#00383c";
 const FileOutline = "#FFFFFF";
@@ -66,9 +68,20 @@ export class ElementMenu extends Element {
 }
 
 export default class FileExplorer extends ElementMenu {
+    controlBar: ControlBar;
 
     constructor(pos: Pos, size: Pos, p: p5, window: Window) {
         super(pos, size, p, window);
+        this.controlBar = new ControlBar(new Pos(this.size.x, controlBarHeight), p, this);
+        this.controlBar.addLeftButton('addFile', Icons.plus, async () => {
+            let files = await (await dialog.showOpenDialog({properties: ['openFile']})).filePaths;
+            if (!(files === undefined)) {
+                for (let path of files) {
+                    this.addFile(Pos.zero(), new Pos(100,100), path);
+                }
+            }
+        });
+        this.elements.push(this.controlBar);
     }
 
     addFile(pos: Pos, size: Pos, file: string): File {
@@ -107,22 +120,30 @@ export class File extends ElementOption {
     constructor(pos: Pos, size: Pos, p: p5, parent: FileExplorer, file: string) {
         super(pos, size, p, parent);
         this.file = file;
-        this.icon = new Icon(Pos.sum(this.pos, FilePad), FileIconSize, p, this);
-        this.icon.loadImage("../resource/img/file.png");
+        this.icon = new Icon(Pos.sum(this.pos, FilePad), FileIconSize, p, this, Icons.file);
     }
 
     draw(offset: Pos, alpha = 255): void {
         let stroke = this.p.color(FileOutline);
         stroke.setAlpha(alpha);
 
-        let abs = Pos.sum(this.pos, offset);
         this.icon.draw(offset, alpha);
-        let textOff = new Pos(this.size.x / 2, 2 * FilePad.y + this.icon.size.y);    
-        this.label(Pos.sum(this.pos, textOff), FilenameHeight, stroke, this.file);
+
+        let textOff = new Pos(this.size.x / 2, 2 * FilePad.y + this.icon.size.y);
+        let txt = File.getName(this.file);
+        if (this.p.textWidth(txt) > this.size.x) {
+            txt = "..." + txt.slice(-10);
+        }
+        this.label(Pos.sum(this.pos, textOff), FilenameHeight, stroke, txt);
     }
 
     ghost(abs: Pos): Element {
         return new Ghost(abs, new Pos(30, 30), this.p, null, this.parent.window, new Sample(abs, new Pos(30, 30), this.p, null, this.file), true);
+    }
+
+    static getName(file: string) {
+        let f = file.split("/");
+        return f[f.length - 1];
     }
 }
 

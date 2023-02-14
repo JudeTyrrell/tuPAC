@@ -2,25 +2,31 @@ import p5 from "p5";
 import Canvas from "./canvas";
 import { Element } from "./element";
 import Pos from "./position";
+import Mouse from './mouse';
 import * as Tone from "tone";
 import Window from "./window";
-import { CanvasOption } from "./fileExplorer";
+import { CanvasOption } from "./elementmenu";
 import Icon from "./icon";
 
-const winSizeX = 1200;
-const winSizeY = 900;
+
+export const winSizeX = 1200;
+export const winSizeY = 900;
+export const resizeLenience = 3;
 
 const sketch = (p: p5) => {
+    Icon.loadResources(p);
     const main = new Window(winSizeX, winSizeY, p);
-    let held: Element = null;
-    let cursorOffX: number;
-    let cursorOffY: number;
+    console.log(Mouse);
+    console.log(Window);
+    new Mouse(main, p);
+    const mouse = new Mouse(main, p);
 
     let inner = main.addCanvas(new Pos(200, 0), new Pos(1000, 1000));
     inner.setSpeed(50);
     inner.addSample(new Pos(50, 50), "../resource/audio/ah.wav");
-    inner.newCanvas(new Pos(10, 200), new Pos(300, 300)).setSpeed(30);
-
+    let canv = inner.newCanvas(new Pos(10, 200), new Pos(300, 300));
+    canv.setSpeed(30);
+    canv.resize(new Pos(50,50));
     let fe = main.addFileExplorer(new Pos(0, 0), new Pos(200, 500));
     fe.addFile(new Pos(80, 50), new Pos(80, 80), "../resource/audio/ah.wav");
     fe.addFile(new Pos(80, 150), new Pos(80, 80), "../resource/audio/ba.wav");
@@ -30,45 +36,25 @@ const sketch = (p: p5) => {
 
     p.setup = () => {
         p.createCanvas(winSizeX, winSizeY);
-        Icon.loadResources(p);
     }
 
     p.draw = () => {
         p.background(220);
         main.draw();
-        if (p.mouseIsPressed) {
-            if (p.mouseButton === p.LEFT) {
-                if (held != null) {
-                    //held.move(new Pos(p.movedX, p.movedY)); // This seems to not work properly for whatever reason
-                    let pos = new Pos(p.winMouseX - cursorOffX, p.winMouseY - cursorOffY);
-                    held.moveTo(pos);
-                    if (typeof held['element'] != 'undefined') {
-                        held.draw(Pos.zero());
-                    }
-                }
-            }
-        }
+        
+        mouse.updateCursor();
+        p.cursor(mouse.getCursor());
     }
 
     p.mousePressed = () => {
         if (p.mouseButton === p.LEFT) {
-            let clicked = main.topUnderMouse(Pos.zero());
-            clicked.clicked();
-            if (clicked.draggable) {
-                cursorOffX = p.winMouseX - clicked.pos.x;
-                cursorOffY = p.winMouseY - clicked.pos.y;
-                held = clicked;
-            }
+            mouse.leftClick();
         }
         return false;
     }
 
     p.mouseReleased = () => {
-        let top = main.topUnderMouse();
-        if (held != null && typeof top['inner'] != 'undefined' && typeof held['element'] != 'undefined') {
-            held.drop(top);
-        }
-        held = null;
+        mouse.release();
         return false;
     }
 }

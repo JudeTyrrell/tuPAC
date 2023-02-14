@@ -2,21 +2,26 @@ import { Element} from "./element";
 import p5 from 'p5';
 import Pos from "./position";
 
+
 export enum Icons {
     missing,
     file,
     play,
     pause,
     stop,
-    canvas
+    canvas,
+    plus
 }
 
 export default class Icon extends Element {
     img: p5.Image;
     static resources : p5.Image[];
 
-    constructor(pos: Pos, size: Pos, p: p5, parent: Element) {
+    constructor(pos: Pos, size: Pos, p: p5, parent: Element, icon?: Icons) {
         super(pos, size, p, parent, false);
+        if (!(icon === undefined)) {
+            this.set(icon);
+        }
     }
 
     draw(offset: Pos, alpha = 255): void {
@@ -41,16 +46,21 @@ export default class Icon extends Element {
             p.loadImage("../resource/img/play.png"),
             p.loadImage("../resource/img/pause.png"),
             p.loadImage("../resource/img/stop.png"),
-            p.loadImage("../resource/img/canvas.png")
+            p.loadImage("../resource/img/canvas.png"),
+            p.loadImage("../resource/img/plus.png")
         ]
     }
 
-    static resource(i: Icons): p5.Image {
-        return this.resources[i];
+    static resource(icon: Icons): p5.Image {
+        return this.resources[icon];
     }
 
     setImage(img: p5.Image) {
         this.img = img;
+    }
+
+    set(icon: Icons) {
+        this.img = Icon.resource(icon);
     }
 
     topUnderPos(offset: any, pos: Pos): any {

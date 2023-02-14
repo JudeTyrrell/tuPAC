@@ -3,6 +3,7 @@ import p5 from "p5";
 import Pos from "./position";
 import Button from "./button";
 import { controlBarColor, buttonSize, buttonBufferX, buttonBufferY } from "./canvas";
+import { Icons } from "./icon";
 
 
 export class ControlBar extends Element {
@@ -22,27 +23,29 @@ export class ControlBar extends Element {
         }
     }
 
-    addLeftButton(name: string, image: string, clicked: Function): Button {
-        let button = new Button(new Pos(this.buttons.length * (buttonSize + buttonBufferX), buttonBufferY),
-            new Pos(buttonSize, buttonSize), this.p, this.parent, image, clicked, name);
+    addLeftButton(name: string, icon: Icons, clicked: Function): Button {
+        let button = new Button(
+            new Pos(this.buttons.length * (buttonSize + buttonBufferX), buttonBufferY),
+            new Pos(buttonSize, buttonSize), 
+            this.p, this.parent, icon, clicked, name);
         this.buttons.push(button);
         return button;
     }
 
     addPlayButton(toPlay: Playable) {
-        this.addLeftButton('play', "../resource/img/play.png", () => {
+        this.addLeftButton('play', Icons.play, () => {
             toPlay.play(true);
         });
     }
 
     addStopButton(toStop: Playable) {
-        this.addLeftButton('stop', "../resource/img/stop.png", () => {
+        this.addLeftButton('stop', Icons.stop, () => {
             toStop.stop(true);
         });
     }
 
     addPauseButton(toPause: Playable) {
-        this.addLeftButton('pause', "../resource/img/pause.png", () => {
+        this.addLeftButton('pause', Icons.pause, () => {
             toPause.pause(true);
         });
     }

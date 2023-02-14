@@ -2,7 +2,7 @@ import Pos from "./position";
 import { Capsule, Element } from "./element";
 import Canvas from "./canvas";
 import p5 from "p5";
-import FileExplorer, { ElementMenu } from "./fileExplorer";
+import FileExplorer, { ElementMenu } from "./elementmenu";
 
 export default class Window {
     elements: Element[];
