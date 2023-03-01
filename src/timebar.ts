@@ -2,19 +2,26 @@ import { Element } from "./element";
 import p5 from "p5";
 import Pos from "./position";
 import Canvas, { timeBarThickness, timeBarColor, timeBarLenience } from "./canvas";
+import Mouse from "./mouse";
 
+const timebarMinSize = new Pos(1, 10);
 
 export class TimeBar extends Element {
     prevX: number;
     parent: Canvas;
 
     constructor(p: p5, parent: Canvas) {
-        super(new Pos(parent.inner.origin.x, parent.controlBar.size.y), new Pos(timeBarThickness, parent.size.y - parent.controlBar.size.y), p, parent, true);
+        super(new Pos(parent.inner.origin.x, parent.controlBar.size.y), new Pos(timeBarThickness, parent.size.y - parent.controlBar.size.y), timebarMinSize, p, parent, true);
         this.prevX = 0;
         this.parent = parent;
     }
 
+    clicked(mouse: Mouse): Element {
+        return this;
+    }
+
     draw(offset: Pos, alpha = 255): void {
+        this.size.y = this.parent.inner.size.y;
         let color = this.p.color(timeBarColor);
         color.setAlpha(alpha);
         this.simpleRect(offset, null, color);

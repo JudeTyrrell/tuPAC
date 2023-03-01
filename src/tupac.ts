@@ -2,22 +2,22 @@ import p5 from "p5";
 import Canvas from "./canvas";
 import { Element } from "./element";
 import Pos from "./position";
-import Mouse from './mouse';
 import * as Tone from "tone";
 import Window from "./window";
 import { CanvasOption } from "./elementmenu";
 import Icon from "./icon";
+import Mouse from "./mouse";
 
 
 export const winSizeX = 1200;
 export const winSizeY = 900;
 export const resizeLenience = 3;
 
+const cursors = ["default", "default", "ew-resize", "ns-resize", "nwse-resize"];
+
 const sketch = (p: p5) => {
     Icon.loadResources(p);
     const main = new Window(winSizeX, winSizeY, p);
-    console.log(Mouse);
-    console.log(Window);
     new Mouse(main, p);
     const mouse = new Mouse(main, p);
 
@@ -28,11 +28,11 @@ const sketch = (p: p5) => {
     canv.setSpeed(30);
     canv.resize(new Pos(50,50));
     let fe = main.addFileExplorer(new Pos(0, 0), new Pos(200, 500));
-    fe.addFile(new Pos(80, 50), new Pos(80, 80), "../resource/audio/ah.wav");
-    fe.addFile(new Pos(80, 150), new Pos(80, 80), "../resource/audio/ba.wav");
+    fe.addFile(new Pos(80, 50), "../resource/audio/ah.wav");
+    fe.addFile(new Pos(80, 150), "../resource/audio/ba.wav");
 
     let em = main.addElementMenu(new Pos(0, 300), new Pos(200, 500));
-    em.addCanvasOption(new Pos(50,50), new Pos(80,80));
+    em.addCanvasOption(new Pos(50,50));
 
     p.setup = () => {
         p.createCanvas(winSizeX, winSizeY);
@@ -43,7 +43,7 @@ const sketch = (p: p5) => {
         main.draw();
         
         mouse.updateCursor();
-        p.cursor(mouse.getCursor());
+        p.cursor(cursors[mouse.getCursor()]);
     }
 
     p.mousePressed = () => {

@@ -4,6 +4,8 @@ import Canvas from "./canvas";
 import p5 from "p5";
 import FileExplorer, { ElementMenu } from "./elementmenu";
 
+const elementSize = new Pos(80, 80);
+
 export default class Window {
     elements: Element[];
     size: Pos;
@@ -28,7 +30,7 @@ export default class Window {
     }
 
     addElementMenu(pos: Pos, size: Pos): ElementMenu {
-        let em = new ElementMenu(pos, size, this.p, this);
+        let em = new ElementMenu(pos, size, elementSize, this.p, this);
         this.elements.push(em);
         return em;
     }
@@ -63,7 +65,6 @@ export default class Window {
         let top = null;
 
         if (Pos.inBox(Pos.zero(), this.size, pos)) {
-            top = this;
             let inner = null;
             for (let element of this.elements) {
                 inner = element.topUnderPos(offset, pos);

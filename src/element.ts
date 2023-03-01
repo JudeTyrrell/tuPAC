@@ -1,32 +1,66 @@
 ﻿import p5, { Color } from "p5";
 import * as Tone from "tone";
 import Pos, { Box } from "./position";
+import Mouse from "./mouse";
+
+export const capsuleMinSize = new Pos(200, 100);
 
 export abstract class Element {
     // pos = (x,y) are co-ordinates respective to the encapsulating Canvas' top-left corner, as is p5.js convention. x increases to the right, y increases down.
     pos: Pos;
     size: Pos;
+    minSize: Pos;
     draggable: boolean;
     resizable: boolean;
     p: p5;
     parent?: Element;
     
-    constructor(pos: Pos, size: Pos, p: p5, parent: Element, draggable = false, resizable = false) {
+    constructor(pos: Pos, size: Pos, minSize: Pos, p: p5, parent: Element, draggable = false, resizable = false) {
         this.pos = pos;
         this.size = size;
         this.draggable = draggable;
         this.resizable = resizable;
         this.p = p;
         this.parent = parent;
+        this.minSize = minSize;
     }
 
-    clicked(): void {}
+    abstract clicked(mouse: Mouse): Element;
+
     drop(onto: Element): void {}
+
+    toTop(): void {
+        if (this.parent != null) {
+            this.parent.pushToTop(this);
+        }
+    }
+
+    pushToTop(element: Element): void {}
 
     simpleRect(offset: Pos, stroke: Color, fill: Color): void {
         /** 
          *  Draws a simple rectangle the size of the Element that calls it.
          */
+        this.rect(Pos.sum(offset, this.pos), this.size, stroke, fill, 1);
+    }
+
+    resize(change: Pos): Pos {
+        let newSize = Pos.minXY(Pos.sum(this.size, change), this.minSize);
+        this.size = newSize;
+        return this.size;
+    }
+
+    getAbsolutePos(): Pos {
+        let p = this.parent;
+        let pos = this.pos.copy();
+        while (p != null) {
+            pos = Pos.sum(pos, p.pos);
+            p = p.parent;
+        }
+        return pos;
+    }
+
+    rect(o: Pos, size: Pos, stroke?: Color, fill? : Color, weight = 1) {
         if (stroke === null) {
             this.p.noStroke();
         } else {
@@ -37,34 +71,20 @@ export abstract class Element {
         } else {
             this.p.fill(fill);
         }
-        this.p.rect(this.pos.x + offset.x, this.pos.y + offset.y, this.size.x, this.size.y);
-    }
-
-    resize(change: Pos): Pos {
-        this.size = Pos.sum(this.size, change);
-        return this.size;
-    }
-
-    getAbsolutePos(): Pos {
-        let p = this.parent;
-        let pos = this.pos;
-        while (p != null) {
-            pos = Pos.sum(pos, p.pos);
-            p = p.parent;
-        }
-        return pos;
-    }
-
-    rect(o: Pos, size: Pos, stroke: Color) {
-        this.p.stroke(stroke);
-        this.p.noFill();
+        this.p.strokeWeight(weight);
         this.p.rect(o.x, o.y, size.x, size.y);
+    }
+
+    line(from: Pos, to: Pos, stroke: Color, thickness: number) {
+        this.p.stroke(stroke);
+        this.p.strokeWeight(thickness);
+        this.p.line(from.x, from.y, to.x, to.y);
     }
 
     label(o: Pos, height: number, color: Color, text: string) {
         this.p.fill(color);
-        this.p.textAlign('center');
         this.p.textSize(height);
+        this.p.textAlign('center');
         this.p.text(text, o.x, o.y);
     }
 
@@ -72,8 +92,8 @@ export abstract class Element {
         this.pos = pos;
     }
 
-    move(dist: Pos): Pos {
-        return this.pos.add(dist);
+    move(dist: Pos): void {
+        this.moveTo(Pos.sum(this.pos,dist));
     }
 
     // This is to allow certain classes to limit the range of movement. By default, we simply set the position.
@@ -115,6 +135,24 @@ export abstract class Playable extends Element {
     abstract stop(master: boolean): void;
     abstract schedule(): void;
 
+    transfer(to: Capsule): void {
+        let pos = this.getAbsolutePos();
+        this.parent.remove(this);
+        to.add(this);
+        this.pos = this.toRelative(pos, to);
+    }
+    
+    toRelative(abs: Pos, capsule: Capsule): Pos {
+        let top = capsule;
+        let relative = abs.copy().sub(top.pos);
+        let parent = top.parent;
+        while (parent != null) {
+            relative.sub(parent.pos);
+            parent = parent.parent;
+        }
+        return relative;
+    }
+
     updateStartTime(): void {
         if (this.parent === null) {
             // This is really dumb, has to be arbitrarily small because Tone.js won't let us set it to 0.
@@ -124,7 +162,7 @@ export abstract class Playable extends Element {
             this.schedule();
         }
         this.pauseTime = this.startTime;
-        console.log("Updated start time: " + this.startTime + " for " + this);
+        //console.log("Updated start time: " + this.startTime + " for " + this);
     }
 
     unschedule(): void {
@@ -147,15 +185,24 @@ export abstract class Capsule extends Playable {
     inner: Box;
 
     constructor(pos: Pos, size: Pos, inner: Box, p: p5, parent: Capsule, draggable = true, resizable = true, speed = 20) {
-        super(pos, size, p, parent, draggable, resizable);
+        super(pos, size, capsuleMinSize, p, parent, draggable, resizable);
         this.inner = inner;
         this.playables = [];
         this.speed = speed;
         this.playing = false;
     }
+
+    pushToTop(playable: Playable): void {
+        let index = this.playables.indexOf(playable);
+        if (index > -1) {
+            this.playables.splice(index, 1);
+            this.playables.push(playable);
+        }
+    }
     
     resize(change: Pos) : Pos {
-        let newSize = Pos.sum(this.size, change);
+        let newSize = Pos.maxXY(Pos.sum(this.size, change), this.minSize);
+        change = Pos.diff(newSize, this.size);
         if (Box.within(new Box(this.pos, newSize), this.parent.inner)) {
             this.size = newSize;
             this.inner.size = Pos.sum(this.inner.size, change);
@@ -166,12 +213,28 @@ export abstract class Capsule extends Playable {
         }
     }
 
+    updateMinSize(): Pos {
+        let newMinSize = Pos.zero()
+        for (let playable of this.playables) {
+            newMinSize = Pos.maxXY(Pos.sum(playable.pos, playable.size), newMinSize);
+        }
+        this.minSize = Pos.maxXY(newMinSize, capsuleMinSize);
+        return this.minSize;
+    }
+
     add(playable: Playable): Playable {
         playable.parent = this;
         playable.updateStartTime();
         //this.resize(Pos.maxXY(Pos.sum(playable.pos, playable.size), this.size));
         this.playables.push(playable);
         return playable;
+    }
+
+    remove(playable: Playable): void {
+        let index = this.playables.indexOf(playable);
+        if (index > -1) {
+            this.playables.splice(index, 1);
+        }
     }
 
     play(master: boolean) {

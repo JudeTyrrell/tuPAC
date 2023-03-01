@@ -5,15 +5,18 @@ import Pos, { Box } from "./position";
 import Sample from "./sample";
 import { ControlBar } from "./controlbar";
 import { TimeBar } from "./timebar";
+import Mouse, { MouseState } from "./mouse";
 export const canvasColor = "#77b7bb";
 export const canvasOutline = "#314814";
 export const canvasDefaultSize = new Pos(200, 150);
 export const controlBarHeight = 30;
-export const controlBarColor = "#111111";
+export const controlBarColor = "#1d383a";
 export const timeBarColor = "#db0000";
 // How many pixels your mouse can be away from the time bar to be able to drag it.
 export const timeBarLenience = 2;
 export const timeBarThickness = 2;
+
+export const timeBarTranslateHeight = 10;
 
 export const buttonBufferX = 10;
 export const buttonBufferY = 5;
@@ -36,18 +39,20 @@ export default class Canvas extends Capsule {
         this.timeBar = new TimeBar(p, this);
     }
 
-    resize(change: Pos) : Pos {
-        let newSize = Pos.sum(this.size, change);
-        if (Box.within(new Box(this.pos, newSize), this.parent.inner)) {
-            this.size = newSize;
-            this.inner.size = Pos.sum(this.inner.size, change);
-            this.controlBar.size.x += change.x;
-            this.timeBar.size.y += change.y;
-            this.updateStartTime();
-            return newSize;
-        } else{ 
-            throw new Error("Can't resize to: "+newSize+", doesn't fit!");
+    clicked(mouse: Mouse): Element {
+        if (mouse.resizing()) {
+            this.updateMinSize();
+            console.log(this.minSize);
+            return this;
+        } else {
+            return null;
         }
+    }
+
+    drop(onto: Capsule): void {
+        /*if (this.parent.playables.indexOf(onto) > -1) {
+            this.transfer(onto);
+        }*/
     }
 
     draw(offset = Pos.zero(), alpha = 255): void {
@@ -57,9 +62,7 @@ export default class Canvas extends Capsule {
         fcolor.setAlpha(alpha);
         this.simpleRect(offset, scolor, fcolor);
 
-        let off = Pos.sum(this.pos, offset);
-        this.timeBar.draw(off);
-        this.controlBar.draw(off);
+        //Move timeBar as sound plays, stop playing if Transport has been stopped.
         if (this.playing) {
             this.timeBar.setPos(new Pos(this.inner.origin.x + ((Tone.getTransport().seconds - this.startTime) * this.speed), this.inner.origin.y));
             if (this.timeBar.pos.x > this.size.x) {
@@ -70,8 +73,28 @@ export default class Canvas extends Capsule {
                 this.pause(false);
             }
         }
-         for (let playable of this.playables) {
+        
+        //Draw everything inside canvas.
+        let off = Pos.sum(this.pos, offset);
+        this.timeBar.draw(off);
+        this.controlBar.draw(off);
+        for (let playable of this.playables) {
             playable.draw(off);
+        }
+
+        //Draw timebar translation if parent has timebar
+        if (this.parent != null && !(this.parent['timeBar'] == null)) {
+            let parent = this.parent as Canvas;
+            let box = new Box(new Pos(0, this.size.y), new Pos((this.size.x * parent.speed) / this.speed, timeBarTranslateHeight));
+            this.rect(Pos.sum(off, box.origin), box.size, scolor, fcolor);
+
+            if (parent.playing && this.playing) {
+                let tbt = this.p.color(timeBarColor);
+                tbt.setAlpha(alpha);
+                let from = new Pos(this.timeBar.pos.x, box.origin.y);
+                let to = new Pos(Math.max(0, parent.timeBar.pos.x - this.pos.x), box.origin.y + box.size.y);
+                this.line(Pos.sum(off, from), Pos.sum(off, to), tbt, timeBarThickness);
+            }
         }
     }
 
@@ -80,7 +103,7 @@ export default class Canvas extends Capsule {
         this.add(samp);
         return samp;
     }
-
+    
     newCanvas(pos: Pos, size = canvasDefaultSize): Canvas {
         let canvas = new Canvas(pos, size, this.p, this, true);
         this.add(canvas)

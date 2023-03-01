@@ -2,6 +2,9 @@ import p5, { Image } from "p5";
 import { Capsule, Element } from "./element";
 import Pos from "./position";
 import Icon, { Icons } from "./icon";
+import Mouse from "./mouse";
+
+const minButtonSize = new Pos(10, 10);
 
 export default class Button extends Element {
     icon: Icon;
@@ -9,7 +12,7 @@ export default class Button extends Element {
     name: string;
 
     constructor(pos: Pos, size: Pos, p: p5, parent: Element, icon: Icons, clicked: Function, name: string) {
-        super(pos, size, p, parent, false);
+        super(pos, size, minButtonSize, p, parent, false);
         this.icon = new Icon(pos, size, p, this, icon);
         this.fn = clicked;
         this.name = name;
@@ -23,8 +26,9 @@ export default class Button extends Element {
         return this.icon.topUnderPos(offset, pos);
     }
 
-    async clicked() {
+    clicked(mouse: Mouse): Element {
         console.log(this.name);
-        await this.fn();
+        this.fn();
+        return null;
     }
 }

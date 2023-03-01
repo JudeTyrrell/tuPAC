@@ -1,20 +1,26 @@
-import { Element, Playable } from "./element";
+import { Element, Playable } from './element';
 import p5 from "p5";
 import Pos from "./position";
 import Button from "./button";
-import { controlBarColor, buttonSize, buttonBufferX, buttonBufferY } from "./canvas";
+import { controlBarColor, buttonSize, buttonBufferX, buttonBufferY, controlBarHeight } from './canvas';
 import { Icons } from "./icon";
+import Mouse from "./mouse";
 
 
 export class ControlBar extends Element {
     buttons: Button[];
 
     constructor(size: Pos, p: p5, parent: Element) {
-        super(Pos.zero(), size, p, parent, false);
+        super(Pos.zero(), size, new Pos(0, controlBarHeight), p, parent, true);
         this.buttons = [];
     }
 
+    clicked(mouse: Mouse): Element {
+        return this.parent;
+    }
+
     draw(offset: Pos, alpha = 255) {
+        this.size.x = this.parent.size.x;
         let color = this.p.color(controlBarColor);
         color.setAlpha(alpha);
         this.simpleRect(offset, null, color);
@@ -55,7 +61,7 @@ export class ControlBar extends Element {
         let abs = Pos.sum(offset, this.pos);
 
         if (Pos.inBox(abs, this.size, pos)) {
-            top = this.parent;
+            top = this;
             let inner = null;
             for (let button of this.buttons) {
                 inner = button.topUnderPos(offset, pos);

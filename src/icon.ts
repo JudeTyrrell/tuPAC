@@ -1,7 +1,9 @@
 import { Element} from "./element";
 import p5 from 'p5';
 import Pos from "./position";
+import Mouse from "./mouse";
 
+const iconMinSize = new Pos(10,10);
 
 export enum Icons {
     missing,
@@ -18,14 +20,17 @@ export default class Icon extends Element {
     static resources : p5.Image[];
 
     constructor(pos: Pos, size: Pos, p: p5, parent: Element, icon?: Icons) {
-        super(pos, size, p, parent, false);
+        super(pos, size, iconMinSize, p, parent, false);
         if (!(icon === undefined)) {
             this.set(icon);
         }
     }
 
+    clicked(mouse: Mouse): Element {
+        return this.parent;
+    }
+
     draw(offset: Pos, alpha = 255): void {
-        this.pos = this.parent.pos;
         let off = Pos.sum(this.pos, offset);
         this.p.tint(255, alpha);
         if (this.img != null) {
