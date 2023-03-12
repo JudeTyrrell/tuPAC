@@ -2,7 +2,8 @@ import Pos from "./position";
 import { Capsule, Element } from "./element";
 import Canvas from "./canvas";
 import p5 from "p5";
-import FileExplorer, { ElementMenu } from "./elementmenu";
+import { ElementMenu } from "./elementmenu";
+import FileExplorer from "./FileExplorer";
 
 const elementSize = new Pos(80, 80);
 
@@ -23,13 +24,13 @@ export default class Window {
         return canv;
     }
 
-    addFileExplorer(pos: Pos, size: Pos): FileExplorer {
+    addFileExplorer(pos: Pos, size: Pos, ipc): FileExplorer {
         let fe = new FileExplorer(pos, size, this.p, this);
         this.elements.push(fe);
         return fe;
     }
 
-    addElementMenu(pos: Pos, size: Pos): ElementMenu {
+    addElementMenu(pos: Pos, size: Pos, ipc): ElementMenu {
         let em = new ElementMenu(pos, size, elementSize, this.p, this);
         this.elements.push(em);
         return em;

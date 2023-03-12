@@ -10,13 +10,15 @@ import Mouse from "./mouse";
 export class ControlBar extends Element {
     buttons: Button[];
 
-    constructor(size: Pos, p: p5, parent: Element) {
-        super(Pos.zero(), size, new Pos(0, controlBarHeight), p, parent, true);
+    constructor(size: Pos, p: p5, parent: Element, draggable = true) {
+        super(Pos.zero(), size, new Pos(0, size.y), p, parent, draggable);
         this.buttons = [];
     }
 
     clicked(mouse: Mouse): Element {
-        return this.parent;
+        if (this.parent.draggable) {
+            return this.parent;
+        }
     }
 
     draw(offset: Pos, alpha = 255) {

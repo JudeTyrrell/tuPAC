@@ -1,6 +1,12 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+
+
 
 const createWindow = () => {
+    ipcMain.handle("showDialog", (e, message) => {
+        return dialog.showOpenDialog({properties: ['openFile']});
+    });
+
     const win = new BrowserWindow({
         width: 1200,
         height: 1000,
@@ -10,6 +16,7 @@ const createWindow = () => {
             contextIsolation: false
         }
     });
+    
 
     win.loadFile('dist/index.html');
 

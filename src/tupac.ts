@@ -7,6 +7,7 @@ import Window from "./window";
 import { CanvasOption } from "./elementmenu";
 import Icon from "./icon";
 import Mouse from "./mouse";
+import { ipcRenderer } from "electron";
 
 
 export const winSizeX = 1200;
@@ -27,12 +28,12 @@ const sketch = (p: p5) => {
     let canv = inner.newCanvas(new Pos(10, 200), new Pos(300, 300));
     canv.setSpeed(30);
     canv.resize(new Pos(50,50));
-    let fe = main.addFileExplorer(new Pos(0, 0), new Pos(200, 500));
-    fe.addFile(new Pos(80, 50), "../resource/audio/ah.wav");
-    fe.addFile(new Pos(80, 150), "../resource/audio/ba.wav");
+    let fe = main.addFileExplorer(new Pos(0, 0), new Pos(200, 500), ipcRenderer);
+    fe.addFile("../resource/audio/ah.wav");
+    fe.addFile("../resource/audio/ba.wav");
 
-    let em = main.addElementMenu(new Pos(0, 300), new Pos(200, 500));
-    em.addCanvasOption(new Pos(50,50));
+    let em = main.addElementMenu(new Pos(0, 300), new Pos(200, 500), ipcRenderer);
+    em.addCanvasOption();
 
     p.setup = () => {
         p.createCanvas(winSizeX, winSizeY);

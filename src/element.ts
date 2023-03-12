@@ -5,17 +5,24 @@ import Mouse from "./mouse";
 
 export const capsuleMinSize = new Pos(200, 100);
 
+export enum Resi {
+    None,
+    X,
+    Y,
+    XY
+}
+
 export abstract class Element {
     // pos = (x,y) are co-ordinates respective to the encapsulating Canvas' top-left corner, as is p5.js convention. x increases to the right, y increases down.
     pos: Pos;
     size: Pos;
     minSize: Pos;
     draggable: boolean;
-    resizable: boolean;
+    resizable: Resi;
     p: p5;
     parent?: Element;
     
-    constructor(pos: Pos, size: Pos, minSize: Pos, p: p5, parent: Element, draggable = false, resizable = false) {
+    constructor(pos: Pos, size: Pos, minSize: Pos, p: p5, parent: Element, draggable = false, resizable = Resi.None) {
         this.pos = pos;
         this.size = size;
         this.draggable = draggable;
@@ -45,7 +52,13 @@ export abstract class Element {
     }
 
     resize(change: Pos): Pos {
-        let newSize = Pos.minXY(Pos.sum(this.size, change), this.minSize);
+        let newSize = Pos.maxXY(Pos.sum(this.size, change), this.minSize);
+        this.size = newSize;
+        return this.size;
+    }
+
+    resizeTo(size: Pos): Pos {
+        let newSize = Pos.maxXY(size, this.minSize);
         this.size = newSize;
         return this.size;
     }
@@ -138,6 +151,7 @@ export abstract class Playable extends Element {
     transfer(to: Capsule): void {
         let pos = this.getAbsolutePos();
         this.parent.remove(this);
+        this.parent = to;
         to.add(this);
         this.pos = this.toRelative(pos, to);
     }
@@ -180,16 +194,44 @@ export abstract class Playable extends Element {
 export abstract class Capsule extends Playable {
     // Array of elements on this Canvas. Elements are drawn in order of increasing index, and so the later an element's index in this array, the closer to the 'top' it is.
     playables: Playable[];
+    // Array of UI elements to be drawn on top.
+    UI: Element[];
     playing: boolean;
     // Where inner elements can be moved to
     inner: Box;
 
-    constructor(pos: Pos, size: Pos, inner: Box, p: p5, parent: Capsule, draggable = true, resizable = true, speed = 20) {
+    constructor(pos: Pos, size: Pos, inner: Box, p: p5, parent: Capsule, draggable = true, resizable = Resi.XY, speed = 20) {
         super(pos, size, capsuleMinSize, p, parent, draggable, resizable);
         this.inner = inner;
         this.playables = [];
+        this.UI = [];
         this.speed = speed;
         this.playing = false;
+    }
+
+    topUnderPos(offset: Pos, pos: Pos): Element {
+        let top = null;
+        let abs = Pos.sum(this.pos, offset);
+
+        if (Pos.inBox(abs, this.size, pos)) {
+            top = this;
+
+            let inner = null;
+            for (let element of this.playables) {
+                inner = element.topUnderPos(abs, pos);
+                if (inner != null) {
+                    top = inner;
+                }
+            }
+            for (let element of this.UI) {
+                inner = element.topUnderPos(abs, pos);
+                if (inner != null) {
+                    top = inner;
+                }
+            }
+        }
+
+        return top;
     }
 
     pushToTop(playable: Playable): void {
@@ -202,14 +244,16 @@ export abstract class Capsule extends Playable {
     
     resize(change: Pos) : Pos {
         let newSize = Pos.maxXY(Pos.sum(this.size, change), this.minSize);
+        let maxSize = Pos.diff(this.parent.inner.size, this.pos);
+        newSize = Pos.minXY(maxSize, newSize);
         change = Pos.diff(newSize, this.size);
-        if (Box.within(new Box(this.pos, newSize), this.parent.inner)) {
+        if (Box.smallerThan(new Box(this.pos, newSize), this.parent.inner)) {
             this.size = newSize;
             this.inner.size = Pos.sum(this.inner.size, change);
             this.updateStartTime();
             return newSize;
-        } else{ 
-            throw new Error("Can't resize to: "+newSize+", doesn't fit!");
+        } else { 
+            return this.size;
         }
     }
 
@@ -240,13 +284,13 @@ export abstract class Capsule extends Playable {
     play(master: boolean) {
         console.log("Playing now, master: " + master + ", Start Time: " + this.pauseTime);
         if (master) {
-            console.log(Tone.getTransport().seconds);
             if (Tone.getTransport().state != 'started') {
                 Tone.getTransport().stop(0);
                 Tone.getTransport().seconds = this.pauseTime;
                 Tone.getTransport().start(0);
                 console.log("Starting Transport at: "+this.pauseTime);
             }
+            //console.log(Tone.getTransport().seconds);
             this.playing = true;
         } else {
             if (this.parent != null) {
@@ -263,9 +307,11 @@ export abstract class Capsule extends Playable {
             for (let playable of this.playables) {
                 playable.pause(false);
             }
-            if (master) {
-                Tone.getTransport().pause();
-                this.pauseTime = Tone.getTransport().seconds;
+            if (Tone.Transport.state === 'started') {
+                this.pauseTime = Tone.Transport.seconds;
+                if (master) {
+                    Tone.getTransport().stop(0);
+                }
             }
             console.log("Paused, set pauseTime to:" + this.pauseTime);
         }
@@ -277,7 +323,7 @@ export abstract class Capsule extends Playable {
             for (let playable of this.playables) {
                 playable.stop(false);
             }
-            if (master) {
+            if (master && Tone.Transport.state === 'started') {
                 Tone.getTransport().stop(0);
             } 
             this.pauseTime = this.startTime;
@@ -307,6 +353,7 @@ export abstract class Capsule extends Playable {
     moveTo(pos = Pos.zero()): void {
         let newBox = Box.within(new Box(pos, this.size), this.parent.inner);
         this.setPos(newBox.origin);
+        this.stop(false);
         this.updateStartTime();
     }
 }

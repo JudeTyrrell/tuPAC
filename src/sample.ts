@@ -6,26 +6,33 @@ import { controlBarHeight } from "./canvas";
 import * as Tone from "tone";
 import Icon from "./icon";
 import Mouse from "./mouse";
+import { ControlBar } from './controlbar';
 
 const sampleOutline = "#314814";
 const sampleBg = "#000000";
-export const sampleMinSize = new Pos(30, 30);
+export const sampleMinSize = new Pos(20, 20);
 
-export const wfResolution = 1024;
-const wfLineThickness = 3;
+const sampleTitleHeight = 10;
+
+const wfLineThickness = 2;
 const wfLinePad = 1;
-const wfPad = new Pos(5, 5);
+const wfPad = new Pos(2, 2);
 const wfColor = "#FFFFFF";
+const maxWidth = 15;
 
 export default class Sample extends Playable {
-    static waveforms = new Map<string, Float32Array>();
+    static buffers = new Map<string, Float32Array>();
     player: Player;
+    sample: string;
     waveform: Float32Array;
+    title: ControlBar;
 
     constructor(pos: Pos, size: Pos, p: p5, parent: Capsule, sample: string) {
         super(pos, size, sampleMinSize, p, parent, true);
+        this.sample = sample;
+        this.title = new ControlBar(new Pos(0, sampleTitleHeight), this.p, this, true);
         this.player = new Player(sample, () => {
-            this.updateWaveform(sample);
+            this.updateWaveform();
         }).toDestination();
         this.pauseTime = 0;
         this.waveform = null;
@@ -35,26 +42,57 @@ export default class Sample extends Playable {
         return this;
     }
 
-    updateWaveform(sample: string) {
-        for (let wf of Sample.waveforms.entries()) {
-            if (wf[0] === sample) {
-                this.waveform = wf[1];
-                console.log(this.waveform);
+    generateWaveform(buff: Float32Array): Float32Array {
+        let length = Math.floor((this.size.x - (wfPad.x * 2)) / (wfLineThickness + wfLinePad));
+        let wf = new Float32Array(length);
+
+        let maxV = Math.max(...buff);
+
+        let ratio = Math.floor(buff.length / length);
+
+        let width = Math.floor(Math.min(maxWidth, ratio) / 2);
+
+        for (let i = 0; i < length; i++) {
+            let ave = 0;
+
+            let centre = i * ratio;
+            let min = Math.max(centre-width, 0); 
+            let max = Math.min(centre+width, buff.length-1);
+
+            for (let j = min; j <= max; j++) {
+                ave += Math.abs(buff[j]);
+            }
+            ave = ave / (max-min);
+
+            wf[i] = ave / maxV;
+        }
+
+        console.log(wf);
+        return wf;
+    }
+
+    updateWaveform() {
+        if (this.parent != null) {
+            for (let wf of Sample.buffers.entries()) {
+                if (wf[0] === this.sample) {
+                    this.resizeTo(new Pos(this.player.buffer.duration * this.parent.speed, this.size.y));
+                    this.waveform = this.generateWaveform(wf[1]);
+                    return;
+                }
+            }
+            if(this.player.loaded) {
+                let buff = this.player.buffer.toArray(0) as Float32Array;
+                this.resizeTo(new Pos(this.player.buffer.duration * this.parent.speed, this.size.y));
+                this.waveform = this.generateWaveform(buff);
+                Sample.buffers.set(this.sample, buff);
                 return;
             }
-        }
-        if(this.player.loaded) {
-            this.waveform = this.player.buffer.toArray(0) as Float32Array;
-            console.log(this.waveform);
-            Sample.waveforms.set(sample, this.waveform);
-            return;
         }
     }
 
     drop(onto: Capsule): void {
-        /*if (this.parent.playables.indexOf(onto) > -1) {
-            this.transfer(onto);
-        }*/
+        this.transfer(onto);
+        this.updateWaveform();
     }
 
     play(master = false): void {
@@ -95,27 +133,26 @@ export default class Sample extends Playable {
         this.drawWaveform(Pos.sum(offset,this.pos));
     }
 
-    drawWaveform(offset: Pos) {
+    drawWaveform(offset: Pos, alpha = 255) {
         // If waveform not loaded yet.
         if (this.waveform === null) {
+            this.updateWaveform();
             return;
         }
 
-        // Calculate number of bars we will have, amount of samples we have per bar
-        let bars = Math.floor(this.size.x / (wfLineThickness + wfLinePad)) - 1;
-        let ratio = this.waveform.length / bars;
-
-        let stroke = this.p.color(wfColor);
-
-        let from = new Pos(offset.x + wfPad.x, 0);
-        let to = new Pos(from.x, 0);
+        let from = new Pos(wfPad.x + offset.x, 0);
+        let to = new Pos(wfPad.x + offset.x, 0);
         let max = this.size.y - (wfPad.y * 2);
 
-        for (let i = 0; i < bars; i++) {
-            let height = this.waveform[Math.floor(ratio * i)] * max;
+        let stroke = this.p.color(wfColor);
+        stroke.setAlpha(alpha);
+
+        for (let bar of this.waveform) {
+            let height = max * bar;
+
             from.y = offset.y + (this.size.y - height) / 2;
             to.y = from.y + height;
-            
+
             this.line(from, to, stroke, wfLineThickness);
 
             from.x += wfLineThickness + wfLinePad;

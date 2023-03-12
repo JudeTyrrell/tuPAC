@@ -1,7 +1,7 @@
 import p5 from "p5";
 import Window from './window';
 import Pos from "./position";
-import { Element } from "./element";
+import { Element, Resi } from "./element";
 import { resizeLenience } from "./tupac";
 
 export enum CursorState {
@@ -49,10 +49,12 @@ export default class Mouse {
                     this.cursor = CursorState.drag;
                 }
                 // Resizing overrules dragging
-                if (under.resizable) {
+                if ((under.resizable === Resi.X) || (under.resizable === Resi.XY)) {
                     if (under.size.x + abs.x - this.p.winMouseX <= resizeLenience) {
                         this.cursor = CursorState.resizeX;
                     }
+                }
+                if ((under.resizable === Resi.Y) || (under.resizable === Resi.XY)) {
                     if (under.size.y + abs.y - this.p.winMouseY <= resizeLenience) {
                         if (this.cursor === CursorState.resizeX) {
                             this.cursor = CursorState.resizeXY;
@@ -95,7 +97,7 @@ export default class Mouse {
         let clicked = this.window.topUnderMouse(Pos.zero());
     
         let abs = clicked.getAbsolutePos();
-        console.log(abs);
+        //console.log(abs);
         this.cursorOff = Pos.diff(clicked.mPos(), abs);
 
         this.held = clicked.clicked(this);
@@ -124,8 +126,7 @@ export default class Mouse {
     release() {
         this.state = MouseState.free;
         let top = this.window.topUnderPos(Pos.zero(), new Pos(this.p.winMouseX-this.cursorOff.x-1, this.p.winMouseY-this.cursorOff.y-1));
-        console.log(top);
-        if (!(this.held == null)) {
+        if (!(this.held == null) && top != null && top['add'] != undefined) {
             this.held.drop(top);
         }
         this.held = null;

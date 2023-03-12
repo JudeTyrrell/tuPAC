@@ -1,4 +1,4 @@
-import { Capsule, Element, Playable } from "./element";
+import { Capsule, Element, Playable, Resi } from "./element";
 import p5 from "p5";
 import * as Tone from "tone";
 import Pos, { Box } from "./position";
@@ -6,6 +6,8 @@ import Sample from "./sample";
 import { ControlBar } from "./controlbar";
 import { TimeBar } from "./timebar";
 import Mouse, { MouseState } from "./mouse";
+import { TimeBarTranslate } from './timebartranslate';
+
 export const canvasColor = "#77b7bb";
 export const canvasOutline = "#314814";
 export const canvasDefaultSize = new Pos(200, 150);
@@ -25,27 +27,47 @@ export const buttonSize = 20;
 export default class Canvas extends Capsule {
     controlBar: ControlBar;
     timeBar: TimeBar;
+    timeBarTranslate: TimeBarTranslate;
 
     constructor(pos: Pos, size: Pos, p: p5, parent: Capsule, draggable = true, speed = 50) {
-        super(pos, size, new Box(new Pos(0, controlBarHeight), new Pos(size.x, size.y - controlBarHeight)), p, parent, draggable, true, speed);
-        this.playables = [];
-        this.controlBar = new ControlBar(new Pos(size.x, controlBarHeight), p, this);
+        super(pos, size, new Box(new Pos(0, controlBarHeight), new Pos(size.x, size.y - controlBarHeight)), p, parent, draggable, Resi.XY, speed);
+        this.controlBar = new ControlBar(new Pos(size.x, controlBarHeight), p, this, true);
         this.controlBar.addPlayButton(this);
         this.controlBar.addStopButton(this);
         this.controlBar.addPauseButton(this);
         if (parent === null) { // We want to leave the initial start time nudge to the parent, but must do it straight away if no parent exists.
             this.updateStartTime();
+        } else if (parent['timeBar'] != undefined) {
+            this.timeBarTranslate = new TimeBarTranslate(new Pos((this.size.x * parent.speed) / this.speed, timeBarTranslateHeight), parent as Canvas, this, this.p);
+            this.UI.push(this.timeBarTranslate);
         }
         this.timeBar = new TimeBar(p, this);
+        this.UI.push(this.controlBar);
+        this.UI.push(this.timeBar);
     }
 
     clicked(mouse: Mouse): Element {
         if (mouse.resizing()) {
             this.updateMinSize();
-            console.log(this.minSize);
             return this;
         } else {
             return null;
+        }
+    }
+
+    add(playable: Playable): Playable {
+        let p = super.add(playable);
+        if(p['timeBar'] != undefined) {
+            let canv = p as Canvas;
+            canv.updateTimeBarTranslate();
+        }
+        return p;
+    }
+
+    updateTimeBarTranslate() {
+        this.timeBarTranslate = new TimeBarTranslate(new Pos((this.size.x * this.parent.speed) / this.speed, timeBarTranslateHeight), this.parent as Canvas, this, this.p);
+        if (!this.UI.includes(this.timeBarTranslate)) {
+            this.UI.push(this.timeBarTranslate);
         }
     }
 
@@ -64,7 +86,7 @@ export default class Canvas extends Capsule {
 
         //Move timeBar as sound plays, stop playing if Transport has been stopped.
         if (this.playing) {
-            this.timeBar.setPos(new Pos(this.inner.origin.x + ((Tone.getTransport().seconds - this.startTime) * this.speed), this.inner.origin.y));
+            this.timeBar.pos.x = (Tone.getTransport().seconds - this.startTime) * this.speed;
             if (this.timeBar.pos.x > this.size.x) {
                 this.stop(false);
                 this.timeBar.pos.x = this.size.x - 2;
@@ -72,28 +94,25 @@ export default class Canvas extends Capsule {
             if (Tone.getTransport().state != "started") {
                 this.pause(false);
             }
+        } // Update timeBar when not playing.
+        if (!this.playing) {
+            this.timeBar.pos.x = (this.pauseTime - this.startTime) * this.speed;
         }
         
         //Draw everything inside canvas.
         let off = Pos.sum(this.pos, offset);
-        this.timeBar.draw(off);
-        this.controlBar.draw(off);
+        for (let elem of this.UI) {
+            elem.draw(off, alpha);
+        }
         for (let playable of this.playables) {
-            playable.draw(off);
+            playable.draw(off, alpha);
         }
 
         //Draw timebar translation if parent has timebar
         if (this.parent != null && !(this.parent['timeBar'] == null)) {
             let parent = this.parent as Canvas;
-            let box = new Box(new Pos(0, this.size.y), new Pos((this.size.x * parent.speed) / this.speed, timeBarTranslateHeight));
-            this.rect(Pos.sum(off, box.origin), box.size, scolor, fcolor);
-
             if (parent.playing && this.playing) {
-                let tbt = this.p.color(timeBarColor);
-                tbt.setAlpha(alpha);
-                let from = new Pos(this.timeBar.pos.x, box.origin.y);
-                let to = new Pos(Math.max(0, parent.timeBar.pos.x - this.pos.x), box.origin.y + box.size.y);
-                this.line(Pos.sum(off, from), Pos.sum(off, to), tbt, timeBarThickness);
+                this.timeBarTranslate.drawBar(off, alpha);
             }
         }
     }
@@ -108,32 +127,5 @@ export default class Canvas extends Capsule {
         let canvas = new Canvas(pos, size, this.p, this, true);
         this.add(canvas)
         return canvas;
-    }
-
-    topUnderPos(offset: Pos, pos: Pos): Element {
-        let top = null;
-        let abs = Pos.sum(this.pos, offset);
-
-        if (Pos.inBox(abs, this.size, pos)) {
-            top = this;
-            let controlBar = this.controlBar.topUnderPos(abs, pos);
-            let timeBar = this.timeBar.topUnderPos(abs, pos);
-
-            if (controlBar != null) {
-                top = controlBar;
-            }
-            if (timeBar != null) {
-                top = timeBar;
-            }
-            let inner = null;
-            for (let element of this.playables) {
-                inner = element.topUnderPos(abs, pos);
-                if (inner != null) {
-                    top = inner;
-                }
-            }
-        }
-
-        return top;
     }
 }

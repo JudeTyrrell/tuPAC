@@ -4,22 +4,15 @@ import { Element } from "./element";
 import Window from "./window";
 import { Ghost } from "./ghosts";
 import Pos from "./position";
-import Sample from "./sample";
-import Icon, { Icons } from "./icon";
+import Icon from "./icon";
 import Canvas from './canvas';
-import { ControlBar } from "./controlbar";
-import { dialog } from "electron";
 import Mouse from "./mouse";
+
+const elementMenuMinSize = new Pos(100, 100);
+const elementOptionMinSize = new Pos(30, 30);
 
 const FileExplorerBgColor = "#009978";
 const FileExplorerOutline = "#00bd9a";
-const FileOutline = "#FFFFFF";
-const FilePad = new Pos(10,10);
-const FileIconSize = new Pos(20,20);
-const FilenameHeight = 12;
-const FileSize = Pos.sum(FilePad, FileIconSize);
-const elementMenuMinSize = new Pos(100, 100);
-const elementOptionMinSize = new Pos(30, 30);
 
 export class ElementMenu extends Element {
     elements: Element[];
@@ -35,13 +28,12 @@ export class ElementMenu extends Element {
 
     addElement(element: Element): Element {
         this.elements.push(element);
-        element.resize(Pos.diff(this.elementSize, element.size));
         this.placeElements();
         return element;
     }
 
-    addCanvasOption(pos: Pos): CanvasOption {
-        let canv = new CanvasOption(Pos.sum(pos, this.pos), this.elementSize, this.p, this);
+    addCanvasOption(): CanvasOption {
+        let canv = new CanvasOption(this.elementSize.copy(), this.p, this);
         this.elements.push(canv);
         this.placeElements();
         return canv;
@@ -100,48 +92,12 @@ export class ElementMenu extends Element {
     }
 }
 
-export default class FileExplorer extends ElementMenu {
-    controlBar: ControlBar;
-
-    constructor(pos: Pos, size: Pos, p: p5, window: Window) {
-        super(pos, size, FileSize, p, window);
-        this.controlBar = new ControlBar(new Pos(this.size.x, controlBarHeight), p, this);
-        /*this.controlBar.addLeftButton('addFile', Icons.plus, async () => {
-            let files = await (await dialog.showOpenDialog({properties: ['openFile']})).filePaths;
-            if (!(files === undefined)) {
-                for (let path of files) {
-                    this.addFile(Pos.zero(), new Pos(100,100), path);
-                }
-            }
-        });*/
-    }
-
-    draw(offset: Pos, alpha = 255): void {
-        let fill = this.p.color(FileExplorerBgColor);
-        fill.setAlpha(alpha);
-        let stroke = this.p.color(FileExplorerOutline);
-        this.simpleRect(offset, stroke, fill);
-        
-        let off = Pos.sum(this.pos, offset);
-        this.controlBar.draw(off);
-        for (let element of this.elements) {
-            element.draw(off);
-        }
-    }
-
-    addFile(pos: Pos, file: string): File {
-        let f = new File(pos, this.elementSize, this.p, this, file);
-        this.addElement(f);
-        return f;
-    }
-}
-
 export abstract class ElementOption extends Element {
     parent: ElementMenu;
     icon: Icon;
 
-    constructor(pos: Pos, size: Pos, p: p5, parent: ElementMenu) {
-        super(pos, size, elementOptionMinSize, p, parent, true);
+    constructor(size: Pos, p: p5, parent: ElementMenu) {
+        super(Pos.zero(), size, elementOptionMinSize, p, parent, true);
     }
 
     clicked(mouse: Mouse): Element {
@@ -163,45 +119,9 @@ export abstract class ElementOption extends Element {
     }
 }
 
-export class File extends ElementOption {
-    file: string;
-
-    constructor(pos: Pos, size: Pos, p: p5, parent: FileExplorer, file: string) {
-        super(pos, size, p, parent);
-        this.file = file;
-        this.icon = new Icon(FilePad, FileIconSize, p, this, Icons.file);
-    }
-
-    draw(offset: Pos, alpha = 255): void {
-        let stroke = this.p.color(FileOutline);
-        stroke.setAlpha(alpha);
-
-        let off = Pos.sum(offset, this.pos);
-
-        this.icon.draw(off, alpha);
-        let textOff = new Pos(this.size.x / 2, 2 * FilePad.y + this.icon.size.y);
-        let txt = File.getName(this.file);
-        this.p.textSize(FilenameHeight);
-        if (this.p.textWidth(txt) > this.size.x) {
-            txt = "..." + txt.slice(-10);
-        }
-
-        this.label(Pos.sum(off, textOff), FilenameHeight, stroke, txt);
-    }
-
-    ghost(abs: Pos): Element {
-        return new Ghost(abs, new Pos(30, 30), this.p, null, this.parent.window, new Sample(abs, new Pos(30, 30), this.p, null, this.file), true);
-    }
-
-    static getName(file: string) {
-        let f = file.split("/");
-        return f[f.length - 1];
-    }
-}
-
 export class CanvasOption extends ElementOption {
-    constructor(pos: Pos, size: Pos, p: p5, parent: ElementMenu) {
-        super(pos, size, p, parent);
+    constructor(size: Pos, p: p5, parent: ElementMenu) {
+        super(size, p, parent);
         this.icon = new Icon(this.pos, this.size, p, this);
         this.icon.loadImage("../resource/img/canvas.png");
     }

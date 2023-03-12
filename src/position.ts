@@ -94,6 +94,10 @@ export class Box {
         return "[Box Origin:" + this.origin + ", Size:" + this.size + "]";
     }
 
+    static smallerThan(box1: Box, box2: Box): boolean {
+        return (box1.size.x <= box2.size.x) && (box1.size.y <= box2.size.y);
+    }
+
     static within(desired: Box, space: Box): Box {
         let newBox = desired.copy();
         try {
