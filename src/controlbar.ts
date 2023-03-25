@@ -1,42 +1,72 @@
-import { Element, Playable } from './element';
+import { Element, capsuleMinSize } from './element';
+import { Playable } from "./Playable";
 import p5 from "p5";
 import Pos from "./position";
 import Button from "./button";
-import { controlBarColor, buttonSize, buttonBufferX, buttonBufferY, controlBarHeight } from './canvas';
+import Canvas, { controlBarColor, buttonSize, buttonBufferX, buttonBufferY } from './canvas';
 import { Icons } from "./icon";
 import Mouse from "./mouse";
+import { Ghost } from './ghosts';
+import { window } from './tupac';
+import { Label } from './label';
 
+const titlePad = 0.3;
+const titleColor = "#FFFFFF";
 
 export class ControlBar extends Element {
-    buttons: Button[];
+    buttonsL: Button[];
+    buttonsR: Button[];
+    label: Label;
 
     constructor(size: Pos, p: p5, parent: Element, draggable = true) {
         super(Pos.zero(), size, new Pos(0, size.y), p, parent, draggable);
-        this.buttons = [];
+        this.buttonsL = [];
+        this.buttonsR = [];
+        this.label = new Label(new Pos(this.size.x*0.5, this.size.y * (1-titlePad)), new Pos(this.size.x/2, this.size.y * (1-titlePad)), "", this.p, this);
     }
 
     clicked(mouse: Mouse): Element {
         if (this.parent.draggable) {
             return this.parent;
         }
+        return null;
     }
 
     draw(offset: Pos, alpha = 255) {
         this.size.x = this.parent.size.x;
         let color = this.p.color(controlBarColor);
         color.setAlpha(alpha);
+
         this.simpleRect(offset, null, color);
-        for (let button of this.buttons) {
+        for (let button of this.buttonsL) {
             button.draw(offset);
         }
+        for (let button of this.buttonsR) {
+            button.draw(offset);
+        }
+        
+        this.label.draw(offset, alpha);
+    }
+
+    addTitle(title: string) {
+        this.label.setText(title);
     }
 
     addLeftButton(name: string, icon: Icons, clicked: Function): Button {
         let button = new Button(
-            new Pos(this.buttons.length * (buttonSize + buttonBufferX), buttonBufferY),
+            new Pos(this.buttonsL.length * (buttonSize + buttonBufferX), buttonBufferY),
             new Pos(buttonSize, buttonSize), 
             this.p, this.parent, icon, clicked, name);
-        this.buttons.push(button);
+        this.buttonsL.push(button);
+        return button;
+    }
+
+    addRightButton(name: string, icon: Icons, clicked: Function): Button {
+        let button = new Button(
+            new Pos(this.size.x - ((this.buttonsR.length+1) * (buttonSize + buttonBufferX)), buttonBufferY),
+            new Pos(buttonSize, buttonSize), 
+            this.p, this.parent, icon, clicked, name);
+        this.buttonsR.push(button);
         return button;
     }
 
@@ -58,6 +88,12 @@ export class ControlBar extends Element {
         });
     }
 
+    addCopyButton(toCopy: Canvas) {
+        this.addRightButton('copy', Icons.missing, () => {
+            return new Ghost(this.mPos(), capsuleMinSize, this.p, null, window, toCopy.copy(), true);
+        })
+    }
+
     topUnderPos(offset: Pos, pos: Pos) {
         let top = null;
         let abs = Pos.sum(offset, this.pos);
@@ -65,7 +101,13 @@ export class ControlBar extends Element {
         if (Pos.inBox(abs, this.size, pos)) {
             top = this;
             let inner = null;
-            for (let button of this.buttons) {
+            for (let button of this.buttonsL) {
+                inner = button.topUnderPos(offset, pos);
+                if (inner != null) {
+                    top = inner;
+                }
+            }
+            for (let button of this.buttonsR) {
                 inner = button.topUnderPos(offset, pos);
                 if (inner != null) {
                     top = inner;
@@ -73,5 +115,13 @@ export class ControlBar extends Element {
             }
         }
         return top;
+    }
+
+    resize(change: Pos): Pos {
+        let size = super.resize(change);
+        for (let button of this.buttonsR) {
+            button.pos.x += change.x;
+        }
+        return size;
     }
 }

@@ -1,5 +1,6 @@
 import Pos from "./position";
-import { Capsule, Element } from "./element";
+import { Element, Resi } from "./element";
+import { Capsule } from "./Capsule";
 import Canvas from "./canvas";
 import p5 from "p5";
 import { ElementMenu } from "./elementmenu";
@@ -19,18 +20,18 @@ export default class Window {
     }
 
     addCanvas(pos: Pos, size: Pos): Canvas {
-        let canv = new Canvas(pos, size, this.p, null, false);
+        let canv = new Canvas(pos, size, this.p, null, false, Resi.None);
         this.elements.push(canv);
         return canv;
     }
 
-    addFileExplorer(pos: Pos, size: Pos, ipc): FileExplorer {
+    addFileExplorer(pos: Pos, size: Pos): FileExplorer {
         let fe = new FileExplorer(pos, size, this.p, this);
         this.elements.push(fe);
         return fe;
     }
 
-    addElementMenu(pos: Pos, size: Pos, ipc): ElementMenu {
+    addElementMenu(pos: Pos, size: Pos): ElementMenu {
         let em = new ElementMenu(pos, size, elementSize, this.p, this);
         this.elements.push(em);
         return em;

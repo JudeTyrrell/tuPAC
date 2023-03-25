@@ -1,5 +1,7 @@
 import p5 from "p5";
-import { Capsule, Element, Playable } from "./element";
+import { Element } from "./element";
+import { Capsule } from "./Capsule";
+import { Playable } from "./Playable";
 import Pos, { Box } from "./position";
 import Window from "./window";
 import Mouse from "./mouse";

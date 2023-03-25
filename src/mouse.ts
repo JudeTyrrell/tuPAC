@@ -1,15 +1,20 @@
 import p5 from "p5";
+
 import Window from './window';
-import Pos from "./position";
 import { Element, Resi } from "./element";
+
 import { resizeLenience } from "./tupac";
+import Pos from "./position";
+
+
 
 export enum CursorState {
     default,
     drag,
     resizeX,
     resizeY,
-    resizeXY
+    resizeXY,
+    type
 }
 
 export enum MouseState {
@@ -63,12 +68,15 @@ export default class Mouse {
                         }
                     }
                 }
+                if (under['text'] != null) {
+                    this.cursor = CursorState.type;
+                }
             }
         } else {
             let change = new Pos(this.p.winMouseX - this.p.pwinMouseX, this.p.winMouseY - this.p.pwinMouseY);
 
             switch (this.state) {
-                case MouseState.dragging:
+            case MouseState.dragging:
                     this.held.move(change);
                     if (this.held['element'] != undefined) {
                         this.held.draw(Pos.zero());
@@ -95,11 +103,10 @@ export default class Mouse {
 
     leftClick() {
         let clicked = this.window.topUnderMouse(Pos.zero());
-    
-        let abs = clicked.getAbsolutePos();
-        //console.log(abs);
-        this.cursorOff = Pos.diff(clicked.mPos(), abs);
+        console.log(clicked);
 
+        let abs = clicked.getAbsolutePos();
+        this.cursorOff = Pos.diff(clicked.mPos(), abs);
         this.held = clicked.clicked(this);
         if (!(this.held == null)) {
             this.held.toTop();
@@ -124,11 +131,13 @@ export default class Mouse {
     }
 
     release() {
-        this.state = MouseState.free;
-        let top = this.window.topUnderPos(Pos.zero(), new Pos(this.p.winMouseX-this.cursorOff.x-1, this.p.winMouseY-this.cursorOff.y-1));
-        if (!(this.held == null) && top != null && top['add'] != undefined) {
-            this.held.drop(top);
+        if (this.state === MouseState.dragging) {
+            let top = this.window.topUnderPos(Pos.zero(), new Pos(this.p.winMouseX-this.cursorOff.x-1, this.p.winMouseY-this.cursorOff.y-1));
+            if (!(this.held == null) && top != null && top['add'] != undefined) {
+                this.held.drop(top);
+            }
         }
+        this.state = MouseState.free;
         this.held = null;
     }
 }

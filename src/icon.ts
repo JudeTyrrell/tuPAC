@@ -1,5 +1,5 @@
-import { Element} from "./element";
 import p5 from 'p5';
+import { Element } from "./element";
 import Pos from "./position";
 import Mouse from "./mouse";
 

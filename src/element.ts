@@ -1,9 +1,11 @@
 ﻿import p5, { Color } from "p5";
-import * as Tone from "tone";
-import Pos, { Box } from "./position";
+import Pos from "./position";
 import Mouse from "./mouse";
+import { sampleMinSize } from './sample';
 
-export const capsuleMinSize = new Pos(200, 100);
+export const capsuleMinSize = new Pos(300, 100);
+
+export const maxSpeed = 1000;
 
 export enum Resi {
     None,
@@ -94,19 +96,12 @@ export abstract class Element {
         this.p.line(from.x, from.y, to.x, to.y);
     }
 
-    label(o: Pos, height: number, color: Color, text: string) {
-        this.p.fill(color);
-        this.p.textSize(height);
-        this.p.textAlign('center');
-        this.p.text(text, o.x, o.y);
-    }
-
     setPos(pos: Pos): void {
         this.pos = pos;
     }
 
     move(dist: Pos): void {
-        this.moveTo(Pos.sum(this.pos,dist));
+        this.moveTo(Pos.sum(this.pos, dist));
     }
 
     // This is to allow certain classes to limit the range of movement. By default, we simply set the position.
@@ -134,226 +129,3 @@ export abstract class Element {
     }
 }
 
-export abstract class Playable extends Element {
-    playing: boolean;
-    scheduleId: number;
-    speed: number; // (playback speed) Measured in pixels/second
-    parent: Capsule;
-    // Measure in seconds
-    startTime: number;
-    pauseTime: number;
-
-    abstract play(master: boolean): void;
-    abstract pause(master: boolean): void;
-    abstract stop(master: boolean): void;
-    abstract schedule(): void;
-
-    transfer(to: Capsule): void {
-        let pos = this.getAbsolutePos();
-        this.parent.remove(this);
-        this.parent = to;
-        to.add(this);
-        this.pos = this.toRelative(pos, to);
-    }
-    
-    toRelative(abs: Pos, capsule: Capsule): Pos {
-        let top = capsule;
-        let relative = abs.copy().sub(top.pos);
-        let parent = top.parent;
-        while (parent != null) {
-            relative.sub(parent.pos);
-            parent = parent.parent;
-        }
-        return relative;
-    }
-
-    updateStartTime(): void {
-        if (this.parent === null) {
-            // This is really dumb, has to be arbitrarily small because Tone.js won't let us set it to 0.
-            this.startTime = 0.0001;
-        } else {
-            this.startTime = this.parent.startTime + (this.pos.x / this.parent.speed);
-            this.schedule();
-        }
-        this.pauseTime = this.startTime;
-        //console.log("Updated start time: " + this.startTime + " for " + this);
-    }
-
-    unschedule(): void {
-        if (this.scheduleId != null) {
-            Tone.Transport.clear(this.scheduleId);
-            this.scheduleId = null;
-        }
-    }
-
-    setSpeed(speed: number): void {
-        this.speed = speed;
-    }
-}
-
-export abstract class Capsule extends Playable {
-    // Array of elements on this Canvas. Elements are drawn in order of increasing index, and so the later an element's index in this array, the closer to the 'top' it is.
-    playables: Playable[];
-    // Array of UI elements to be drawn on top.
-    UI: Element[];
-    playing: boolean;
-    // Where inner elements can be moved to
-    inner: Box;
-
-    constructor(pos: Pos, size: Pos, inner: Box, p: p5, parent: Capsule, draggable = true, resizable = Resi.XY, speed = 20) {
-        super(pos, size, capsuleMinSize, p, parent, draggable, resizable);
-        this.inner = inner;
-        this.playables = [];
-        this.UI = [];
-        this.speed = speed;
-        this.playing = false;
-    }
-
-    topUnderPos(offset: Pos, pos: Pos): Element {
-        let top = null;
-        let abs = Pos.sum(this.pos, offset);
-
-        if (Pos.inBox(abs, this.size, pos)) {
-            top = this;
-
-            let inner = null;
-            for (let element of this.playables) {
-                inner = element.topUnderPos(abs, pos);
-                if (inner != null) {
-                    top = inner;
-                }
-            }
-            for (let element of this.UI) {
-                inner = element.topUnderPos(abs, pos);
-                if (inner != null) {
-                    top = inner;
-                }
-            }
-        }
-
-        return top;
-    }
-
-    pushToTop(playable: Playable): void {
-        let index = this.playables.indexOf(playable);
-        if (index > -1) {
-            this.playables.splice(index, 1);
-            this.playables.push(playable);
-        }
-    }
-    
-    resize(change: Pos) : Pos {
-        let newSize = Pos.maxXY(Pos.sum(this.size, change), this.minSize);
-        let maxSize = Pos.diff(this.parent.inner.size, this.pos);
-        newSize = Pos.minXY(maxSize, newSize);
-        change = Pos.diff(newSize, this.size);
-        if (Box.smallerThan(new Box(this.pos, newSize), this.parent.inner)) {
-            this.size = newSize;
-            this.inner.size = Pos.sum(this.inner.size, change);
-            this.updateStartTime();
-            return newSize;
-        } else { 
-            return this.size;
-        }
-    }
-
-    updateMinSize(): Pos {
-        let newMinSize = Pos.zero()
-        for (let playable of this.playables) {
-            newMinSize = Pos.maxXY(Pos.sum(playable.pos, playable.size), newMinSize);
-        }
-        this.minSize = Pos.maxXY(newMinSize, capsuleMinSize);
-        return this.minSize;
-    }
-
-    add(playable: Playable): Playable {
-        playable.parent = this;
-        playable.updateStartTime();
-        //this.resize(Pos.maxXY(Pos.sum(playable.pos, playable.size), this.size));
-        this.playables.push(playable);
-        return playable;
-    }
-
-    remove(playable: Playable): void {
-        let index = this.playables.indexOf(playable);
-        if (index > -1) {
-            this.playables.splice(index, 1);
-        }
-    }
-
-    play(master: boolean) {
-        console.log("Playing now, master: " + master + ", Start Time: " + this.pauseTime);
-        if (master) {
-            if (Tone.getTransport().state != 'started') {
-                Tone.getTransport().stop(0);
-                Tone.getTransport().seconds = this.pauseTime;
-                Tone.getTransport().start(0);
-                console.log("Starting Transport at: "+this.pauseTime);
-            }
-            //console.log(Tone.getTransport().seconds);
-            this.playing = true;
-        } else {
-            if (this.parent != null) {
-                if (this.parent.playing) {
-                    this.playing = true;
-                }
-            }
-        }
-    }
-
-    pause(master: boolean): void {
-        if (this.playing) {
-            this.playing = false;
-            for (let playable of this.playables) {
-                playable.pause(false);
-            }
-            if (Tone.Transport.state === 'started') {
-                this.pauseTime = Tone.Transport.seconds;
-                if (master) {
-                    Tone.getTransport().stop(0);
-                }
-            }
-            console.log("Paused, set pauseTime to:" + this.pauseTime);
-        }
-    }
-
-    stop(master: boolean): void {
-        if (this.playing) {
-            this.playing = false;
-            for (let playable of this.playables) {
-                playable.stop(false);
-            }
-            if (master && Tone.Transport.state === 'started') {
-                Tone.getTransport().stop(0);
-            } 
-            this.pauseTime = this.startTime;
-            console.log("Stopped, set pauseTime to:" + this.startTime);
-        }
-    }
-
-    schedule(): void {
-        this.unschedule();
-        this.scheduleId = Tone.Transport.schedule((time) => {
-            if ((this.parent === null) || this.parent.playing) {
-                this.play(false);
-            }
-        }, this.startTime);
-        for (let playable of this.playables) {
-            playable.schedule();
-        }
-    }
-
-    unschedule(): void {
-        Tone.Transport.clear(this.scheduleId);
-        for (let pb of this.playables) {
-            pb.unschedule();
-        }
-    }
-
-    moveTo(pos = Pos.zero()): void {
-        let newBox = Box.within(new Box(pos, this.size), this.parent.inner);
-        this.setPos(newBox.origin);
-        this.stop(false);
-        this.updateStartTime();
-    }
-}

@@ -7,12 +7,10 @@ import Mouse from "./mouse";
 const timebarMinSize = new Pos(1, 10);
 
 export class TimeBar extends Element {
-    prevX: number;
     parent: Canvas;
 
     constructor(p: p5, parent: Canvas) {
         super(new Pos(parent.inner.origin.x, parent.controlBar.size.y), new Pos(timeBarThickness, parent.size.y - parent.controlBar.size.y), timebarMinSize, p, parent, true);
-        this.prevX = 0;
         this.parent = parent;
     }
 
@@ -48,8 +46,7 @@ export class TimeBar extends Element {
             } else if (newPos.x + this.size.x >= this.parent.size.x) {
                 newPos.x = this.parent.size.x - this.size.x;
             }
-            this.prevX = this.pos.x;
-            this.parent.pauseTime = newPos.x / this.parent.speed;
+            this.parent.pauseTime = this.parent.startTime + (newPos.x / this.parent.speed);
             this.setPos(newPos);
         }
     }

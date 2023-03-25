@@ -1,8 +1,12 @@
-import p5, { Image } from "p5";
-import { Capsule, Element } from "./element";
-import Pos from "./position";
+import p5 from "p5";
+
+import { Element } from "./element";
+
 import Icon, { Icons } from "./icon";
 import Mouse from "./mouse";
+
+import Pos from "./position";
+
 
 const minButtonSize = new Pos(10, 10);
 

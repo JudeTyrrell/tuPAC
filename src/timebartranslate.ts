@@ -26,10 +26,12 @@ export class TimeBarTranslate extends Element {
         }
     }
 
-    draw(offset: Pos, alpha?: number): void {
+    updateSize() {
         this.pos.y = this.dest.size.y;
         this.size.x = (this.dest.size.x * this.origin.speed) / this.dest.speed;
+    }
 
+    draw(offset: Pos, alpha?: number): void {
         let stroke = this.p.color(timeBarTranslateOutline);
         stroke.setAlpha(alpha);
         let fill = this.p.color(timeBarTranslateColor);
@@ -44,5 +46,14 @@ export class TimeBarTranslate extends Element {
         let from = new Pos(this.dest.timeBar.pos.x, this.pos.y);
         let to = new Pos(Math.max(0, this.origin.timeBar.pos.x - this.dest.pos.x), this.pos.y + this.size.y);
         this.line(Pos.sum(offset, from), Pos.sum(offset, to), tbt, timeBarThickness);
+    }
+
+    resize(change: Pos): Pos {
+        let x0 = (this.dest.size.x * this.origin.speed) / this.dest.speed;
+        let newSpeed = (this.dest.speed * x0) / (x0 + change.x);
+        if (this.dest.setSpeed(newSpeed)) {
+            this.dest.updateStartTime();
+        }
+        return null;
     }
 }

@@ -1,6 +1,6 @@
 import p5 from "p5";
-import { controlBarHeight, canvasDefaultSize } from './canvas';
-import { Element } from "./element";
+import { controlBarHeight } from './canvas';
+import { Element, capsuleMinSize } from './element';
 import Window from "./window";
 import { Ghost } from "./ghosts";
 import Pos from "./position";
@@ -10,6 +10,7 @@ import Mouse from "./mouse";
 
 const elementMenuMinSize = new Pos(100, 100);
 const elementOptionMinSize = new Pos(30, 30);
+const elementOptionPad = 20;
 
 const FileExplorerBgColor = "#009978";
 const FileExplorerOutline = "#00bd9a";
@@ -56,12 +57,12 @@ export class ElementMenu extends Element {
     }
 
     placeElements(): void {
-        let x = 0;
+        let x = elementOptionPad;
         let y = controlBarHeight;
         let max = Pos.diff(this.size, this.elementSize);
         for (let element of this.elements) {
             element.moveTo(new Pos(x, y));
-            x += this.elementSize.x;
+            x += this.elementSize.x + elementOptionPad;
             if (x > max.x) {
                 x = 0;
                 y += this.elementSize.y;
@@ -131,6 +132,6 @@ export class CanvasOption extends ElementOption {
     }
 
     ghost(abs: Pos): Element {
-        return new Ghost(abs, canvasDefaultSize, this.p, null, this.parent.window, new Canvas(abs, canvasDefaultSize, this.p, null, true), true);
+        return new Ghost(abs, capsuleMinSize, this.p, null, this.parent.window, new Canvas(abs, capsuleMinSize, this.p, null, true), true);
     }
 }
