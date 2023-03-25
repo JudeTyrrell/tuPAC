@@ -16,6 +16,7 @@ export class Label extends Element {
         super(pos, size, minTextSize, p, parent, drag, resi);
         this.height = this.size.y;
         this.raw_text = text;
+        this.text = null;
         this.color = this.p.color(color);
     }
 
@@ -27,10 +28,11 @@ export class Label extends Element {
     updateText(): void {
         this.p.textSize(this.height);
         let text_cut = this.raw_text;
-        let diff = this.size.y - this.p.textWidth(text_cut);
-        if (diff > 0) {
-            text_cut = ".." + text_cut.slice(2 + diff);
+        let diff = this.size.x - this.p.textWidth(text_cut);
+        if (diff < 0) {
+            text_cut = ".." + text_cut.slice(2 - diff);
         }
+        console.log(text_cut);
         this.text = text_cut;
     }
 

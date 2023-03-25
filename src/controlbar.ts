@@ -33,7 +33,6 @@ export class ControlBar extends Element {
     }
 
     draw(offset: Pos, alpha = 255) {
-        this.size.x = this.parent.size.x;
         let color = this.p.color(controlBarColor);
         color.setAlpha(alpha);
 
@@ -112,6 +111,10 @@ export class ControlBar extends Element {
                 if (inner != null) {
                     top = inner;
                 }
+            }
+            inner = this.label.topUnderPos(offset, pos);
+            if (inner != null) {
+                top = inner;
             }
         }
         return top;

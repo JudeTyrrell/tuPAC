@@ -52,10 +52,10 @@ export abstract class Capsule extends Playable {
         }
         let ratio = speed / this.speed;
         for (let playable of this.playables) {
+            console.log(ratio, playable.speed);
             playable.setSpeed(ratio * playable.speed);
             playable.updateStartTime();
         }
-        console.log(speed);
         this.speed = speed;
         return true;
     }
@@ -93,10 +93,14 @@ export abstract class Capsule extends Playable {
     }
 
     resize(change: Pos): Pos {
-        let newSize = Pos.maxXY(Pos.sum(this.size, change), this.minSize);
+        return this.resizeTo(Pos.sum(this.size, change));
+    }
+
+    resizeTo(size: Pos): Pos {
+        let newSize = Pos.maxXY(size, this.minSize);
         let maxSize = Pos.diff(this.parent.inner.size, this.pos);
         newSize = Pos.minXY(maxSize, newSize);
-        change = Pos.diff(newSize, this.size);
+        let change = Pos.diff(newSize, this.size);
         if (Box.smallerThan(new Box(this.pos, newSize), this.parent.inner)) {
             this.size = newSize;
             this.inner.size = Pos.sum(this.inner.size, change);
@@ -129,9 +133,11 @@ export abstract class Capsule extends Playable {
         let indexu = this.UI.indexOf(element);
         if (indexp > -1) {
             this.playables.splice(indexp, 1);
+            element.parent = null;
         }
         if (indexu > -1) {
             this.UI.splice(indexu, 1);
+            element.parent = null;
         }
     }
 

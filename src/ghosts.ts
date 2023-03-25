@@ -28,6 +28,7 @@ export class Ghost extends Element {
 
     drop(onto: Capsule): void {
         onto.add(this.element);
+        this.element.setSpeed(onto.speed);
         this.element.moveTo(this.window.toRelative(this.pos, onto));
     }
 }

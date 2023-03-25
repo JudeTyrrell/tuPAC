@@ -39,7 +39,7 @@ export default class Canvas extends Capsule {
         this.controlBar.addPlayButton(this);
         this.controlBar.addStopButton(this);
         this.controlBar.addPauseButton(this);
-        this.controlBar.addCopyButton(this);
+        //this.controlBar.addCopyButton(this);
         this.controlBar.addTitle("Canvas"+canvasNum);
         canvasNum += 1;
         if (parent === null) { // We want to leave the initial start time nudge to the parent, but must do it straight away if no parent exists.
@@ -51,6 +51,20 @@ export default class Canvas extends Capsule {
         this.timeBar = new TimeBar(p, this);
         this.UI.push(this.controlBar);
         this.UI.push(this.timeBar);
+    }
+
+    resize(change: Pos): Pos {
+        return this.resizeTo(Pos.sum(this.size, change));
+    }
+
+    resizeTo(size: Pos): Pos {
+        let s = super.resizeTo(size);
+        this.controlBar.resizeTo(new Pos(s.x, controlBarHeight));
+        this.timeBar.resizeTo(new Pos(timeBarThickness, s.y - controlBarHeight))
+        if (this.timeBarTranslate != null) {
+            this.timeBarTranslate.moveTo(new Pos(0, s.y));
+        }
+        return s;
     }
 
     updateStartTime(): void {

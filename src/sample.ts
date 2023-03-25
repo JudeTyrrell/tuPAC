@@ -42,6 +42,16 @@ export default class Sample extends Playable {
         this.title.addTitle(Sample.getTitle(sample));
     }
 
+    resize(change: Pos): Pos {
+        return this.resizeTo(Pos.sum(change, this.size));
+    }
+
+    resizeTo(size: Pos): Pos {
+        let s = super.resizeTo(size);
+        this.title.resizeTo(new Pos(s.x, sampleTitleHeight));
+        return s;
+    }
+
     copy(): Sample {
         let samp = new Sample(this.pos, this.size, this.p, this.parent, this.sample);
         return samp;
@@ -76,7 +86,7 @@ export default class Sample extends Playable {
             wf[i] = ave / maxV;
         }
 
-        //console.log(wf);
+        //console.log(wf); 
         return wf;
     }
 
@@ -99,8 +109,10 @@ export default class Sample extends Playable {
     }
 
     drop(onto: Capsule): void {
-        this.transfer(onto);
-        this.updateWaveform();
+        if (onto != this.parent) {
+            this.transfer(onto);
+            this.updateWaveform();
+        }
     }
 
     play(master = false): void {
@@ -130,9 +142,9 @@ export default class Sample extends Playable {
     // Speed measured as is everywhere else, pixels / second
     setSpeed(speed: number): boolean {
         if (this.parent != null) {
-            this.speed = this.parent.speed;
+            this.speed = Math.max(speed, this.getMinSpeed());
             if (this.player.loaded) {
-                this.size.x = Math.max(sampleMinSize.x, this.player.buffer.duration * this.speed);
+                this.resizeTo(new Pos(Math.max(sampleMinSize.x, this.player.buffer.duration * this.speed), this.size.y));
                 this.updateWaveform();
                 this.player.playbackRate = this.player.buffer.duration / (this.size.x / this.speed);
             }

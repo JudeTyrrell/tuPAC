@@ -19,7 +19,6 @@ export class TimeBar extends Element {
     }
 
     draw(offset: Pos, alpha = 255): void {
-        this.size.y = this.parent.inner.size.y;
         let color = this.p.color(timeBarColor);
         color.setAlpha(alpha);
         this.simpleRect(offset, null, color);
