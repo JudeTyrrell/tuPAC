@@ -36,9 +36,8 @@ export default class Canvas extends Capsule {
         super(pos, size, new Box(new Pos(0, controlBarHeight), new Pos(size.x, size.y - controlBarHeight)), p, parent, draggable, resi, speed);
         
         this.controlBar = new ControlBar(new Pos(size.x, controlBarHeight), p, this, true);
-        this.controlBar.addPlayButton(this);
+        this.controlBar.addPlayPauseButton(this);
         this.controlBar.addStopButton(this);
-        this.controlBar.addPauseButton(this);
         //this.controlBar.addCopyButton(this);
         this.controlBar.addTitle("Canvas"+canvasNum);
         canvasNum += 1;

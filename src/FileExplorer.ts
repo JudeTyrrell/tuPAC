@@ -16,7 +16,7 @@ export const FileExplorerOutline = "#00bd9a";
 const FileOutline = "#FFFFFF";
 const FileIconPad = new Pos(20,10);
 const FileIconSize = new Pos(20,20);
-const FilenameHeight = 12;
+const FilenameHeight = 15;
 export const FileSize = Pos.sum(new Pos(2*FileIconPad.x, 2*FileIconPad.y + FilenameHeight), FileIconSize);
 
 export default class FileExplorer extends ElementMenu {
@@ -88,7 +88,9 @@ export class File extends ElementOption {
         super(size, p, parent);
         this.file = file;
         this.icon = new Icon(FileIconPad, FileIconSize, p, this, Icons.file);
-        this.label = new Label(new Pos(this.size.x / 2, 2 * FileIconPad.y + this.icon.size.y), new Pos(this.size.x, FilenameHeight), File.getName(file), this.p, this);
+        let name = File.getName(file);
+        this.p.textSize(FilenameHeight);
+        this.label = new Label(new Pos((this.size.x - this.p.textWidth(name))/ 2, 2 * FileIconPad.y + this.icon.size.y), new Pos(this.size.x, FilenameHeight), name, this.p, this);
     }
 
     draw(offset: Pos, alpha = 255): void {

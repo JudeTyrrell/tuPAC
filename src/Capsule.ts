@@ -29,7 +29,8 @@ export abstract class Capsule extends Playable {
         let minSpeed = (this.size.x * this.parent.speed) / (this.parent.size.x - this.pos.x);
 
         for (let playable of this.playables) {
-            let min = playable.getMinSpeed() / this.speed;
+            let min = playable.getMinSpeed();
+            console.log(min, minSpeed);
 
             if (min > minSpeed) {
                 minSpeed = min;
@@ -50,10 +51,7 @@ export abstract class Capsule extends Playable {
         } else if (speed > maxSpeed) {
             speed = maxSpeed;
         }
-        let ratio = speed / this.speed;
         for (let playable of this.playables) {
-            console.log(ratio, playable.speed);
-            playable.setSpeed(ratio * playable.speed);
             playable.updateStartTime();
         }
         this.speed = speed;
@@ -122,8 +120,6 @@ export abstract class Capsule extends Playable {
 
     add(playable: Playable): Playable {
         playable.parent = this;
-        playable.setSpeed(this.speed);
-        playable.updateStartTime();
         this.playables.push(playable);
         return playable;
     }
@@ -178,16 +174,18 @@ export abstract class Capsule extends Playable {
     }
 
     stop(master: boolean): void {
+        for (let playable of this.playables) {
+            playable.stop(false);
+        }
         if (this.playing) {
             this.playing = false;
-            for (let playable of this.playables) {
-                playable.stop(false);
-            }
             if (master && Tone.Transport.state === 'started') {
                 Tone.getTransport().stop(0);
             }
             this.pauseTime = this.startTime;
             console.log("Stopped, set pauseTime to:" + this.startTime);
+        } else {
+            this.pauseTime = this.startTime;
         }
     }
 
@@ -198,6 +196,7 @@ export abstract class Capsule extends Playable {
                 this.play(false);
             }
         }, this.startTime);
+        //console.log(this.startTime);
         for (let playable of this.playables) {
             playable.updateStartTime();
         }

@@ -5,6 +5,7 @@ import Canvas from "./canvas";
 import p5 from "p5";
 import { ElementMenu } from "./elementmenu";
 import FileExplorer from "./FileExplorer";
+import { Label } from "./label";
 
 const elementSize = new Pos(80, 80);
 
@@ -12,6 +13,7 @@ export default class Window {
     elements: Element[];
     size: Pos;
     p: p5;
+    typingInto: Label;
 
     constructor(sizeX: number, sizeY: number, p: p5) {
         this.elements = [];
@@ -77,5 +79,23 @@ export default class Window {
         }
         //console.log(top);
         return top;
+    }
+
+    type(key: string): void {
+        if (this.typingInto != null) {
+            this.typingInto.raw_text += key;
+            this.typingInto.updateText();
+        }
+    }
+
+    typeBackspace(): void {
+        if (this.typingInto != null) {
+            this.typingInto.raw_text = this.typingInto.raw_text.slice(0, -1);
+            this.typingInto.updateText();
+        }
+    }
+
+    stopTyping(): void {
+        this.typingInto = null;
     }
 }

@@ -10,8 +10,9 @@ import { Ghost } from './ghosts';
 import { window } from './tupac';
 import { Label } from './label';
 
-const titlePad = 0.3;
+const titlePad = 0.1;
 const titleColor = "#FFFFFF";
+const titleMaxWidth = capsuleMinSize.x / 2;
 
 export class ControlBar extends Element {
     buttonsL: Button[];
@@ -22,7 +23,7 @@ export class ControlBar extends Element {
         super(Pos.zero(), size, new Pos(0, size.y), p, parent, draggable);
         this.buttonsL = [];
         this.buttonsR = [];
-        this.label = new Label(new Pos(this.size.x*0.5, this.size.y * (1-titlePad)), new Pos(this.size.x/2, this.size.y * (1-titlePad)), "", this.p, this);
+        this.label = new Label(new Pos((this.size.x - Math.min(titleMaxWidth, this.size.x)) * 0.5, this.size.y * titlePad * 0.5), new Pos(Math.min(titleMaxWidth, this.size.x), this.size.y * (1-titlePad)), "", this.p, this, titleColor);
     }
 
     clicked(mouse: Mouse): Element {
@@ -57,6 +58,10 @@ export class ControlBar extends Element {
             new Pos(buttonSize, buttonSize), 
             this.p, this.parent, icon, clicked, name);
         this.buttonsL.push(button);
+        let shove = button.pos.x + button.size.x - this.label.pos.x;
+        if (shove > 0) {
+            this.label.move(new Pos(shove, 0));
+        }
         return button;
     }
 
@@ -67,6 +72,16 @@ export class ControlBar extends Element {
             this.p, this.parent, icon, clicked, name);
         this.buttonsR.push(button);
         return button;
+    }
+
+    addPlayPauseButton(toPlay: Playable) {
+        this.addLeftButton('play', Icons.play, () => {
+            if (toPlay.playing) {
+                toPlay.pause(true);
+            } else {
+                toPlay.play(true);
+            }
+        });
     }
 
     addPlayButton(toPlay: Playable) {

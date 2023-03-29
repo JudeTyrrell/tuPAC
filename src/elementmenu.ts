@@ -64,7 +64,7 @@ export class ElementMenu extends Element {
             element.moveTo(new Pos(x, y));
             x += this.elementSize.x + elementOptionPad;
             if (x > max.x) {
-                x = 0;
+                x = elementOptionPad;
                 y += this.elementSize.y;
             }
             if (y > max.y) {

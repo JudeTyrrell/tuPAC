@@ -5,8 +5,9 @@ import { Element, Resi } from "./element";
 
 import { resizeLenience } from "./tupac";
 import Pos from "./position";
+import { Label } from "./label";
 
-
+const oneOff = new Pos(-1, -1);
 
 export enum CursorState {
     default,
@@ -76,7 +77,7 @@ export default class Mouse {
             let change = new Pos(this.p.winMouseX - this.p.pwinMouseX, this.p.winMouseY - this.p.pwinMouseY);
 
             switch (this.state) {
-            case MouseState.dragging:
+                case MouseState.dragging:
                     this.held.move(change);
                     if (this.held['element'] != undefined) {
                         this.held.draw(Pos.zero());
@@ -108,6 +109,10 @@ export default class Mouse {
         let abs = clicked.getAbsolutePos();
         this.cursorOff = Pos.diff(clicked.mPos(), abs);
         this.held = clicked.clicked(this);
+        this.window.typingInto = null;
+        if (this.cursor === CursorState.type) {
+            this.window.typingInto = clicked as Label;
+        }
         if (!(this.held == null)) {
             this.held.toTop();
             switch (this.cursor) {
@@ -131,9 +136,10 @@ export default class Mouse {
     }
 
     release() {
-        if (this.state === MouseState.dragging) {
-            let top = this.window.topUnderPos(Pos.zero(), new Pos(this.p.winMouseX-this.cursorOff.x-1, this.p.winMouseY-this.cursorOff.y-1));
-            if (!(this.held == null) && top != null && top['add'] != undefined) {
+        if (this.state === MouseState.dragging && !(this.held === null)) {
+            let top = this.window.topUnderPos(Pos.zero(), Pos.sum(this.held.getAbsolutePos(), oneOff));
+            //console.log(top);
+            if (top != null && top['add'] != undefined) {
                 this.held.drop(top);
             }
         }

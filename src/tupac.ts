@@ -10,7 +10,7 @@ export const resizeLenience = 3;
 
 export let window = new Window(winSizeX, winSizeY, null);
 
-const cursors = ["default", "default", "ew-resize", "ns-resize", "nwse-resize"];
+const cursors = ["default", "default", "ew-resize", "ns-resize", "nwse-resize", "text"];
 
 const sketch = (p: p5) => {
     
@@ -52,6 +52,20 @@ const sketch = (p: p5) => {
     p.mouseReleased = () => {
         mouse.release();
         return false;
+    }
+
+    p.keyTyped = () => {
+        window.type(p.key);
+        return false;
+    }
+
+    p.keyPressed = () => {
+        if (p.keyCode === p.ENTER) {
+            window.stopTyping();
+        }
+        if (p.keyCode === p.BACKSPACE) {
+            window.typeBackspace();
+        }
     }
 }
 

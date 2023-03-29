@@ -36,6 +36,7 @@ export default class Sample extends Playable {
         this.UI.push(this.title);
         this.player = new Player(sample, () => {
             this.updateWaveform();
+            this.setSpeed(this.parent.speed);
         }).toDestination();
         this.pauseTime = 0;
         this.waveform = null;
@@ -49,6 +50,7 @@ export default class Sample extends Playable {
     resizeTo(size: Pos): Pos {
         let s = super.resizeTo(size);
         this.title.resizeTo(new Pos(s.x, sampleTitleHeight));
+        this.updateWaveform();
         return s;
     }
 
@@ -102,7 +104,6 @@ export default class Sample extends Playable {
                 let buff = this.player.buffer.toArray(0) as Float32Array;
                 this.waveform = this.generateWaveform(buff);
                 Sample.buffers.set(this.sample, buff);
-                this.setSpeed(0);
                 return;
             }
         }
@@ -111,7 +112,6 @@ export default class Sample extends Playable {
     drop(onto: Capsule): void {
         if (onto != this.parent) {
             this.transfer(onto);
-            this.updateWaveform();
         }
     }
 
@@ -121,7 +121,7 @@ export default class Sample extends Playable {
     }
 
     pause(master = false): void {
-        this.pauseTime = this.player.sampleTime;
+        this.pauseTime = this.player.immediate();
         this.player.stop();
     }
 
@@ -139,18 +139,38 @@ export default class Sample extends Playable {
         }, this.startTime);
     }
 
-    // Speed measured as is everywhere else, pixels / second
-    setSpeed(speed: number): boolean {
-        if (this.parent != null) {
-            this.speed = Math.max(speed, this.getMinSpeed());
-            if (this.player.loaded) {
-                this.resizeTo(new Pos(Math.max(sampleMinSize.x, this.player.buffer.duration * this.speed), this.size.y));
-                this.updateWaveform();
-                this.player.playbackRate = this.player.buffer.duration / (this.size.x / this.speed);
-            }
-            return true;
+    getMinSpeed(): number {
+        if (this.player.loaded) {
+            return sampleMinSize.x / this.player.buffer.duration;
+        } else {
+            return 0;
         }
-        return false;
+    }
+
+    // Speed measured is also pixels/s, but doesn't really make sense intuitively.
+    setSpeed(speed: number): boolean {
+        if (this.player.loaded) {
+            this.speed = Math.max(speed, this.getMinSpeed());
+            this.resizeTo(new Pos(this.speed * this.player.buffer.duration,  this.size.y));
+            this.player.playbackRate = this.parent.speed / this.speed;
+            console.log(this.speed);
+        }
+        return true;
+    }
+
+    updatePlaybackRate() {
+        if (this.player.loaded) {
+            this.player.playbackRate = this.parent.speed / this.speed;
+        }
+    }
+
+    updateStartTime(): void {
+        super.updateStartTime();
+        this.updatePlaybackRate();
+    }
+
+    scaleSpeed(scale: number): boolean {
+        return this.setSpeed(scale * this.speed);
     }
 
     draw(offset: Pos, alpha = 255): void {

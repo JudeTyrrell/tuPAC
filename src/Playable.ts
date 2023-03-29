@@ -7,7 +7,7 @@ import { Capsule } from "./Capsule";
 export abstract class Playable extends Element {
     playing: boolean;
     scheduleId: number;
-    speed: number; // (playback speed) Measured in pixels/second
+    speed: number;
     parent: Capsule;
     // Array of UI elements to be drawn on top.
     UI: Element[];
@@ -28,6 +28,7 @@ export abstract class Playable extends Element {
         this.parent.remove(this);
         to.add(this);
         this.pos = this.toRelative(pos, to);
+        //console.log(this.pos);
     }
 
     toRelative(abs: Pos, capsule: Capsule): Pos {

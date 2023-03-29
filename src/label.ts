@@ -15,9 +15,20 @@ export class Label extends Element {
     constructor(pos: Pos, size: Pos, text: string, p: p5, parent: Element, color = "#FFFFFF", drag = false, resi = Resi.None) {
         super(pos, size, minTextSize, p, parent, drag, resi);
         this.height = this.size.y;
+        console.log(this.height);
         this.raw_text = text;
         this.text = null;
         this.color = this.p.color(color);
+    }
+
+    resize(change: Pos): Pos {
+        return this.resizeTo(Pos.sum(this.size, change));
+    }
+
+    resizeTo(size: Pos): Pos {
+        let s = super.resizeTo(size);
+        this.updateText();
+        return s;
     }
 
     setText(text: string): void {
@@ -26,13 +37,14 @@ export class Label extends Element {
     }
 
     updateText(): void {
-        this.p.textSize(this.height);
+        this.p.textSize(this.height * 0.9);
         let text_cut = this.raw_text;
-        let diff = this.size.x - this.p.textWidth(text_cut);
+        let char = this.p.textWidth("E");
+        let diff = this.size.x - (text_cut.length * char);
         if (diff < 0) {
-            text_cut = ".." + text_cut.slice(2 - diff);
+            text_cut = ".." + text_cut.slice(2 - diff / char);
         }
-        console.log(text_cut);
+        //console.log(this.p.textWidth(text_cut), this.size.x);
         this.text = text_cut;
     }
 
@@ -43,12 +55,13 @@ export class Label extends Element {
 
         this.color.setAlpha(alpha);
         this.p.fill(this.color);
-        this.p.textSize(this.height);
-        this.p.textAlign('center');
+        this.p.textSize(this.height * 0.9);
+        this.p.textAlign('left');
 
         let abs = Pos.sum(offset, this.pos);
+        let width = this.p.textWidth(this.text);
 
-        this.p.text(this.text, abs.x, abs.y);
+        this.p.text(this.text, abs.x + ((this.size.x - width) / 2), abs.y + this.height * 0.1, abs.x + this.size.x, abs.y + this.height);
     }
 
     clicked(mouse: Mouse): Element {
