@@ -24,6 +24,7 @@ export class ControlBar extends Element {
         this.buttonsL = [];
         this.buttonsR = [];
         this.label = new Label(new Pos((this.size.x - Math.min(titleMaxWidth, this.size.x)) * 0.5, this.size.y * titlePad * 0.5), new Pos(Math.min(titleMaxWidth, this.size.x), this.size.y * (1-titlePad)), "", this.p, this, titleColor);
+        this.label.typeable = false;
     }
 
     clicked(mouse: Mouse): Element {
@@ -50,12 +51,16 @@ export class ControlBar extends Element {
 
     addTitle(title: string) {
         this.label.setText(title);
+        this.label.typeable = true;
     }
 
-    addLeftButton(name: string, icon: Icons, clicked: Function): Button {
+    addLeftButton(name: string, icon: Icons, clicked: Function, size = new Pos(buttonSize, buttonSize)): Button {
+        let newX = buttonBufferX;
+        for (let button of this.buttonsL) {
+            newX += button.size.x + buttonBufferX;
+        }
         let button = new Button(
-            new Pos(this.buttonsL.length * (buttonSize + buttonBufferX), buttonBufferY),
-            new Pos(buttonSize, buttonSize), 
+            new Pos(newX, buttonBufferY), size, 
             this.p, this.parent, icon, clicked, name);
         this.buttonsL.push(button);
         let shove = button.pos.x + button.size.x - this.label.pos.x;
@@ -136,10 +141,17 @@ export class ControlBar extends Element {
     }
 
     resize(change: Pos): Pos {
-        let size = super.resize(change);
+        return this.resizeTo(Pos.sum(this.pos, change));
+    }
+
+    resizeTo(size: Pos): Pos {
+        let prevX = this.size.x;
+        let s = super.resizeTo(size);
+        let change = s.x - prevX;
         for (let button of this.buttonsR) {
-            button.pos.x += change.x;
+            button.move(new Pos(change, 0));
         }
+        this.label.resize(new Pos(change, 0));
         return size;
     }
 }

@@ -1,8 +1,8 @@
 import p5 from "p5";
 import * as Tone from "tone";
 import Pos, { Box } from "./position";
-import { Playable } from "./Playable";
-import { Resi, capsuleMinSize, maxSpeed, Element } from "./element";
+import { Playable } from './Playable';
+import { Resi, capsuleMinSize, Element } from "./element";
 
 
 export abstract class Capsule extends Playable {
@@ -12,8 +12,8 @@ export abstract class Capsule extends Playable {
     // Where inner elements can be moved to
     inner: Box;
 
-    constructor(pos: Pos, size: Pos, inner: Box, p: p5, parent: Capsule, draggable = true, resizable = Resi.XY, speed = 20) {
-        super(pos, size, capsuleMinSize, p, parent, draggable, resizable);
+    constructor(pos: Pos, size: Pos, minSize: Pos, inner: Box, p: p5, parent: Capsule, draggable = true, resizable = Resi.XY, speed = 20) {
+        super(pos, size, minSize, p, parent, draggable, resizable);
         this.inner = inner;
         this.playables = [];
         this.UI = [];
@@ -30,7 +30,6 @@ export abstract class Capsule extends Playable {
 
         for (let playable of this.playables) {
             let min = playable.getMinSpeed();
-            console.log(min, minSpeed);
 
             if (min > minSpeed) {
                 minSpeed = min;
@@ -40,10 +39,26 @@ export abstract class Capsule extends Playable {
         return minSpeed;
     }
 
+    getMaxSpeed(): number {
+        let maxSpeed = 1000;
+
+        for (let playable of this.playables) {
+            let max = (this.size.x - playable.pos.x) * playable.speed / playable.size.x;
+
+            if (max < maxSpeed) {
+                maxSpeed = max;
+            }
+        }
+
+        return maxSpeed;
+    }
+
 
     setSpeed(speed: number): boolean {
         let minSpeed = this.getMinSpeed();
+        let maxSpeed = this.getMaxSpeed();
 
+        console.log(maxSpeed, speed);
         if (speed < minSpeed) {
             speed = minSpeed;
         } else if (speed === this.speed) {
@@ -54,6 +69,7 @@ export abstract class Capsule extends Playable {
         for (let playable of this.playables) {
             playable.updateStartTime();
         }
+        console.log(speed);
         this.speed = speed;
         return true;
     }
@@ -64,15 +80,16 @@ export abstract class Capsule extends Playable {
 
         if (Pos.inBox(abs, this.size, pos)) {
             top = this;
-
-            let inner = null;
-            for (let element of this.playables) {
-                inner = element.topUnderPos(abs, pos);
-                if (inner != null) {
-                    top = inner;
-                }
+        }
+        
+        let inner = null;
+        for (let element of this.playables) {
+            inner = element.topUnderPos(abs, pos);
+            if (inner != null) {
+                top = inner;
             }
         }
+       
         for (let element of this.UI) {
             let inner = element.topUnderPos(abs, pos);
             if (inner != null) {
@@ -121,6 +138,7 @@ export abstract class Capsule extends Playable {
     add(playable: Playable): Playable {
         playable.parent = this;
         this.playables.push(playable);
+        playable.connect(this);
         return playable;
     }
 

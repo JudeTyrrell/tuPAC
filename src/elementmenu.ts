@@ -7,13 +7,15 @@ import Pos from "./position";
 import Icon from "./icon";
 import Canvas from './canvas';
 import Mouse from "./mouse";
+import Distort from './distort';
+import { effectEmptySize } from "./effect";
 
 const elementMenuMinSize = new Pos(100, 100);
 const elementOptionMinSize = new Pos(30, 30);
 const elementOptionPad = 20;
 
-const FileExplorerBgColor = "#009978";
-const FileExplorerOutline = "#00bd9a";
+const FileExplorerBgColor = "#7A8990";
+const FileExplorerOutline = "#353D40";
 
 export class ElementMenu extends Element {
     elements: Element[];
@@ -35,9 +37,14 @@ export class ElementMenu extends Element {
 
     addCanvasOption(): CanvasOption {
         let canv = new CanvasOption(this.elementSize.copy(), this.p, this);
-        this.elements.push(canv);
-        this.placeElements();
+        this.addElement(canv);
         return canv;
+    }
+
+    addDistortOption(): DistortEffectOption {
+        let dist = new DistortEffectOption(this.elementSize.copy(), this.p, this);
+        this.addElement(dist);
+        return dist;
     }
 
     clicked(mouse: Mouse): Element {
@@ -133,5 +140,25 @@ export class CanvasOption extends ElementOption {
 
     ghost(abs: Pos): Element {
         return new Ghost(abs, capsuleMinSize, this.p, null, this.parent.window, new Canvas(abs, capsuleMinSize, this.p, null, true), true);
+    }
+}
+
+export abstract class EffectOption extends ElementOption {
+    constructor(size: Pos, p: p5, parent: ElementMenu) {
+        super(size, p, parent);
+        this.icon = new Icon(this.pos, this.size, p, this);
+        this.icon.loadImage("../resource/img/effect.png");
+    }
+
+    draw(offset: Pos, alpha: number) {
+        this.icon.draw(Pos.sum(offset, this.pos), alpha);
+    }
+
+    abstract ghost(abs: Pos);
+}
+
+export class DistortEffectOption extends EffectOption {
+    ghost(abs: Pos) {
+        return new Ghost(abs, effectEmptySize, this.p, null, this.parent.window, new Distort(abs, effectEmptySize, this.p, null, true), true)
     }
 }

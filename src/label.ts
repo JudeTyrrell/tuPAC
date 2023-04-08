@@ -11,12 +11,14 @@ export class Label extends Element {
     text: string;
     height: number;
     color: Color;
+    typeable: boolean;
     
-    constructor(pos: Pos, size: Pos, text: string, p: p5, parent: Element, color = "#FFFFFF", drag = false, resi = Resi.None) {
+    constructor(pos: Pos, size: Pos, text: string, p: p5, parent: Element, color = "#FFFFFF", drag = false, resi = Resi.None, typeable = true) {
         super(pos, size, minTextSize, p, parent, drag, resi);
         this.height = this.size.y;
-        console.log(this.height);
+        //console.log(this.height);
         this.raw_text = text;
+        this.typeable = typeable;
         this.text = null;
         this.color = this.p.color(color);
     }
@@ -65,7 +67,16 @@ export class Label extends Element {
     }
 
     clicked(mouse: Mouse): Element {
-        if (Pos.inBox(this.pos, this.size, this.mPos())) {
+        if (this.typeable && Pos.inBox(this.pos, this.size, this.mPos())) {
+            return this;
+        }
+        return null;
+    }
+
+    topUnderPos(offset: any, pos: Pos) {
+        let abs = Pos.sum(offset, this.pos);
+
+        if (this.typeable && Pos.inBox(abs, this.size,  pos)) {
             return this;
         }
         return null;

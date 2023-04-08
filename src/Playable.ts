@@ -9,6 +9,8 @@ export abstract class Playable extends Element {
     scheduleId: number;
     speed: number;
     parent: Capsule;
+    node: Tone.ToneAudioNode;
+
     // Array of UI elements to be drawn on top.
     UI: Element[];
 
@@ -26,9 +28,22 @@ export abstract class Playable extends Element {
     transfer(to: Capsule): void {
         let pos = this.getAbsolutePos();
         this.parent.remove(this);
+        this.setPos(this.toRelative(pos, to));
         to.add(this);
-        this.pos = this.toRelative(pos, to);
         //console.log(this.pos);
+    }
+
+    connect(to: Playable) {
+        if (this.node != null) {
+            this.node.disconnect();
+            if (to == null) {
+                this.node.toDestination();
+            } else if (to.node == null) {
+                this.connect(to.parent);
+            } else {
+                this.node.connect(to.node);
+            }
+        } 
     }
 
     toRelative(abs: Pos, capsule: Capsule): Pos {
@@ -62,6 +77,10 @@ export abstract class Playable extends Element {
     }
 
     getMinSpeed(): number {
+        return (this.size.x * this.parent.speed) / (this.parent.size.x - this.pos.x);
+    }
+
+    getMaxSpeed(): number {
         return (this.size.x * this.parent.speed) / (this.parent.size.x - this.pos.x);
     }
 

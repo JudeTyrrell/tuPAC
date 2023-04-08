@@ -9,7 +9,7 @@ import Mouse from "./mouse";
 import { ControlBar } from './controlbar';
 import { File } from "./FileExplorer";
 
-const sampleOutline = "#314814";
+const sampleOutline = "#b1c1c9";
 const sampleBg = "#000000";
 export const sampleMinSize = new Pos(20, 50);
 
@@ -37,10 +37,16 @@ export default class Sample extends Playable {
         this.player = new Player(sample, () => {
             this.updateWaveform();
             this.setSpeed(this.parent.speed);
-        }).toDestination();
+        });
+        if (this.parent['node'] === null) {
+            this.player.toDestination();
+        } else {
+            this.player.connect(this.parent.node);
+        }
         this.pauseTime = 0;
         this.waveform = null;
         this.title.addTitle(Sample.getTitle(sample));
+        this.node = this.player;
     }
 
     resize(change: Pos): Pos {
@@ -55,7 +61,7 @@ export default class Sample extends Playable {
     }
 
     copy(): Sample {
-        let samp = new Sample(this.pos, this.size, this.p, this.parent, this.sample);
+        let samp = new Sample(this.pos.copy(), this.size.copy(), this.p, this.parent, this.sample);
         return samp;
     }
     

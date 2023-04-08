@@ -30,8 +30,9 @@ const sketch = (p: p5) => {
         fe.addFile("..\\resource\\audio\\ah.wav");
         fe.addFile("..\\resource\\audio\\ba.wav");
 
-        let em = window.addElementMenu(new Pos(0, 300), new Pos(200, 500));
+        let em = window.addElementMenu(new Pos(0, 500), new Pos(200, 500));
         em.addCanvasOption();
+        em.addDistortOption();
     }
 
     p.draw = () => {

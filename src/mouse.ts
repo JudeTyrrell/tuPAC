@@ -69,7 +69,7 @@ export default class Mouse {
                         }
                     }
                 }
-                if (under['text'] != null) {
+                if (under['typeable'] != null && (under as Label).typeable) {
                     this.cursor = CursorState.type;
                 }
             }

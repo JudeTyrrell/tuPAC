@@ -11,10 +11,10 @@ import Mouse from "./mouse";
 import { TimeBarTranslate } from './timebartranslate';
 import { sampleMinSize } from './sample';
 
-export const canvasColor = "#77b7bb";
-export const canvasOutline = "#314814";
+export const canvasColor = "#A6B4B9";
+export const canvasOutline = "#000000";
 export const controlBarHeight = 30;
-export const controlBarColor = "#1d383a";
+export const controlBarColor = "#353d40";
 export const timeBarColor = "#db0000";
 // How many pixels your mouse can be away from the time bar to be able to drag it.
 export const timeBarLenience = 2;
@@ -22,7 +22,7 @@ export const timeBarThickness = 2;
 
 export const timeBarTranslateHeight = 10;
 
-export const buttonBufferX = 10;
+export const buttonBufferX = 5;
 export const buttonBufferY = 5;
 export const buttonSize = 20;
 let canvasNum = 0;
@@ -33,7 +33,7 @@ export default class Canvas extends Capsule {
     timeBarTranslate: TimeBarTranslate;
 
     constructor(pos: Pos, size: Pos, p: p5, parent: Capsule, draggable = true, resi = Resi.XY, speed = 30) {
-        super(pos, size, new Box(new Pos(0, controlBarHeight), new Pos(size.x, size.y - controlBarHeight)), p, parent, draggable, resi, speed);
+        super(pos, size, capsuleMinSize, new Box(new Pos(0, controlBarHeight), new Pos(size.x, size.y - controlBarHeight)), p, parent, draggable, resi, speed);
         
         this.controlBar = new ControlBar(new Pos(size.x, controlBarHeight), p, this, true);
         this.controlBar.addPlayPauseButton(this);
@@ -50,6 +50,12 @@ export default class Canvas extends Capsule {
         this.timeBar = new TimeBar(p, this);
         this.UI.push(this.controlBar);
         this.UI.push(this.timeBar);
+    }
+
+    connect(to: Playable) {
+        for(let playable of this.playables) {
+            playable.connect(to);
+        }
     }
 
     resize(change: Pos): Pos {

@@ -11,8 +11,8 @@ import Sample, { sampleMinSize } from "./sample";
 import { Ghost } from "./ghosts";
 import { Label } from "./label";
 
-export const FileExplorerBgColor = "#009978";
-export const FileExplorerOutline = "#00bd9a";
+export const FileExplorerBgColor = "#7A8990";
+export const FileExplorerOutline = "#353D40";
 const FileOutline = "#FFFFFF";
 const FileIconPad = new Pos(20,10);
 const FileIconSize = new Pos(20,20);

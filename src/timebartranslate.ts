@@ -1,12 +1,10 @@
 import { Element, Resi } from "./element";
 import Pos from "./position";
-import Canvas, { timeBarColor, timeBarThickness, timeBarTranslateHeight } from './canvas';
+import Canvas, { canvasColor, canvasOutline, timeBarColor, timeBarThickness, timeBarTranslateHeight } from './canvas';
 import p5 from "p5";
 import Mouse from "./mouse";
 import { sampleMinSize } from './sample';
 
-export const timeBarTranslateColor = "#77b7bb";
-export const timeBarTranslateOutline = "#314814";
 
 export class TimeBarTranslate extends Element { 
     origin: Canvas;
@@ -32,9 +30,9 @@ export class TimeBarTranslate extends Element {
     }
 
     draw(offset: Pos, alpha?: number): void {
-        let stroke = this.p.color(timeBarTranslateOutline);
+        let stroke = this.p.color(canvasOutline);
         stroke.setAlpha(alpha);
-        let fill = this.p.color(timeBarTranslateColor);
+        let fill = this.p.color(canvasColor);
         fill.setAlpha(alpha);
 
         this.simpleRect(offset, stroke, fill);
@@ -49,11 +47,15 @@ export class TimeBarTranslate extends Element {
     }
 
     resize(change: Pos): Pos {
+        return this.resizeTo(Pos.sum(change, this.pos));
+    }
+
+    resizeTo(size: Pos): Pos {
         let x0 = (this.dest.size.x * this.origin.speed) / this.dest.speed;
-        let newSpeed = (this.dest.speed * x0) / (x0 + change.x);
+        let newSpeed = (this.dest.speed * x0) / (x0 + size.x - this.pos.x);
         if (this.dest.setSpeed(newSpeed)) {
             this.dest.updateStartTime();
         }
-        return null;
+        return this.size;
     }
 }
