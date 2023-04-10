@@ -27,9 +27,11 @@ export abstract class Playable extends Element {
 
     transfer(to: Capsule): void {
         let pos = this.getAbsolutePos();
-        this.parent.remove(this);
-        this.setPos(this.toRelative(pos, to));
+        if (this.parent != null) {
+            this.parent.remove(this);
+        }
         to.add(this);
+        this.moveTo(this.toRelative(pos, to));
         //console.log(this.pos);
     }
 

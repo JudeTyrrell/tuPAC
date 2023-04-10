@@ -73,6 +73,12 @@ export abstract class Capsule extends Playable {
         this.speed = speed;
         return true;
     }
+    
+    drop(onto: Capsule): void {
+        if (this.parent === null || this.parent.playables.indexOf(onto) > -1) {
+            this.transfer(onto);
+        }
+    }
 
     topUnderPos(offset: Pos, pos: Pos): Element {
         let top = null;

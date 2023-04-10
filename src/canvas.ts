@@ -103,12 +103,6 @@ export default class Canvas extends Capsule {
         this.UI.push(this.timeBarTranslate);
     }
 
-    drop(onto: Capsule): void {
-        if (this.parent.playables.indexOf(onto) > -1) {
-            this.transfer(onto);
-        }
-    }
-
     draw(offset = Pos.zero(), alpha = 255): void {
         let scolor = this.p.color(canvasOutline);
         scolor.setAlpha(alpha);

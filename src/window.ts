@@ -7,7 +7,7 @@ import { ElementMenu } from "./elementmenu";
 import FileExplorer from "./FileExplorer";
 import { Label } from "./label";
 
-const elementSize = new Pos(80, 80);
+const elementSize = new Pos(70, 80);
 
 export default class Window {
     elements: Element[];

@@ -27,14 +27,8 @@ export class Ghost extends Element {
     }
 
     drop(onto: Capsule): void {
-        try {
-            let pos = Box.within(new Box(this.window.toRelative(this.element.pos, onto), this.element.size), onto.inner);
-            onto.add(this.element);
-            this.element.moveTo(pos.origin);
-            this.element.setSpeed(onto.speed);
-            this.element.updateStartTime();
-        } catch (e) { 
-            console.log(e);
-        }
+        this.element.drop(onto);
+        this.element.setSpeed(onto.speed);
+        this.element.updateStartTime();
     }
 }

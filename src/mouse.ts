@@ -136,7 +136,7 @@ export default class Mouse {
     }
 
     release() {
-        if (this.state === MouseState.dragging && !(this.held === null)) {
+        if (this.state === MouseState.dragging) {
             let top = this.window.topUnderPos(Pos.zero(), Pos.sum(this.held.getAbsolutePos(), oneOff));
             //console.log(top);
             if (top != null && top['add'] != undefined) {
@@ -144,6 +144,5 @@ export default class Mouse {
             }
         }
         this.state = MouseState.free;
-        this.held = null;
     }
 }

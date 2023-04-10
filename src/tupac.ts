@@ -3,6 +3,8 @@ import Pos from "./position";
 import Icon from "./icon";
 import Window from "./window";
 import Mouse from "./mouse";
+import { Capsule } from "./Capsule";
+import { Playable } from "./Playable";
 
 export const winSizeX = 1200;
 export const winSizeY = 900;
@@ -33,6 +35,7 @@ const sketch = (p: p5) => {
         let em = window.addElementMenu(new Pos(0, 500), new Pos(200, 500));
         em.addCanvasOption();
         em.addDistortOption();
+        em.addReverbOption();
     }
 
     p.draw = () => {
@@ -66,6 +69,15 @@ const sketch = (p: p5) => {
         }
         if (p.keyCode === p.BACKSPACE) {
             window.typeBackspace();
+        }
+        if (p.keyCode === p.DELETE) {
+            let h = mouse.held;
+            if (h != null && h.parent['playables'] != null) {
+                if (h['scheduleId'] != null) {
+                    (h as Playable).unschedule();
+                }
+                (mouse.held.parent as Capsule).remove(h);
+            }
         }
     }
 }

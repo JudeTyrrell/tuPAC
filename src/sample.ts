@@ -11,7 +11,7 @@ import { File } from "./FileExplorer";
 
 const sampleOutline = "#b1c1c9";
 const sampleBg = "#000000";
-export const sampleMinSize = new Pos(20, 50);
+export const sampleMinSize = new Pos(60, 50);
 
 const sampleTitleHeight = 20;
 
@@ -38,11 +38,6 @@ export default class Sample extends Playable {
             this.updateWaveform();
             this.setSpeed(this.parent.speed);
         });
-        if (this.parent['node'] === null) {
-            this.player.toDestination();
-        } else {
-            this.player.connect(this.parent.node);
-        }
         this.pauseTime = 0;
         this.waveform = null;
         this.title.addTitle(Sample.getTitle(sample));
@@ -116,7 +111,7 @@ export default class Sample extends Playable {
     }
 
     drop(onto: Capsule): void {
-        if (onto != this.parent) {
+        if (this.parent === null || onto != this.parent) {
             this.transfer(onto);
         }
     }
@@ -158,8 +153,8 @@ export default class Sample extends Playable {
         if (this.player.loaded) {
             this.speed = Math.max(speed, this.getMinSpeed());
             this.resizeTo(new Pos(this.speed * this.player.buffer.duration,  this.size.y));
+            this.parent.updateStartTime();
             this.player.playbackRate = this.parent.speed / this.speed;
-            console.log(this.speed);
         }
         return true;
     }

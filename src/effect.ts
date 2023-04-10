@@ -11,7 +11,7 @@ import Mouse from "./mouse";
 export const effectBg = "#FFFFFF";
 export const effectOutline = "#EEEEEE";
 export const effectBarHeight = 20;
-export const effectEmptySize = new Pos(60, 40);
+export const effectEmptySize = new Pos(70, 40);
 
 export default abstract class Effect extends Capsule {
     controlBar: ControlBar;
@@ -64,6 +64,13 @@ export default abstract class Effect extends Capsule {
         this.inner.size = new Pos(this.size.x, this.size.y - effectBarHeight);
         this.controlBar.resizeTo(new Pos(size.x, effectBarHeight));
         return size;
+    }
+    
+    updateStartTime(): void {
+        super.updateStartTime();
+        if(this.playables[0] != null) {
+            this.resizeTo(new Pos(this.playables[0].size.x, this.size.y));
+        }
     }
 
     abstract copy(): Effect;

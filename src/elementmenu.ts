@@ -9,10 +9,11 @@ import Canvas from './canvas';
 import Mouse from "./mouse";
 import Distort from './distort';
 import { effectEmptySize } from "./effect";
+import Reverb from "./reverb";
 
 const elementMenuMinSize = new Pos(100, 100);
 const elementOptionMinSize = new Pos(30, 30);
-const elementOptionPad = 20;
+const elementOptionPad = new Pos(20, 20);
 
 const FileExplorerBgColor = "#7A8990";
 const FileExplorerOutline = "#353D40";
@@ -47,6 +48,12 @@ export class ElementMenu extends Element {
         return dist;
     }
 
+    addReverbOption(): ReverbEffectOption {
+        let dist = new ReverbEffectOption(this.elementSize.copy(), this.p, this);
+        this.addElement(dist);
+        return dist;
+    }
+
     clicked(mouse: Mouse): Element {
         return null;
     }
@@ -64,15 +71,15 @@ export class ElementMenu extends Element {
     }
 
     placeElements(): void {
-        let x = elementOptionPad;
-        let y = controlBarHeight;
+        let x = elementOptionPad.x;
+        let y = controlBarHeight + elementOptionPad.y;
         let max = Pos.diff(this.size, this.elementSize);
         for (let element of this.elements) {
             element.moveTo(new Pos(x, y));
-            x += this.elementSize.x + elementOptionPad;
+            x += this.elementSize.x + elementOptionPad.x;
             if (x > max.x) {
-                x = elementOptionPad;
-                y += this.elementSize.y;
+                x = elementOptionPad.x;
+                y += this.elementSize.y + elementOptionPad.y;
             }
             if (y > max.y) {
                 break;
@@ -160,5 +167,11 @@ export abstract class EffectOption extends ElementOption {
 export class DistortEffectOption extends EffectOption {
     ghost(abs: Pos) {
         return new Ghost(abs, effectEmptySize, this.p, null, this.parent.window, new Distort(abs, effectEmptySize, this.p, null, true), true)
+    }
+}
+
+export class ReverbEffectOption extends EffectOption {
+    ghost(abs: Pos) {
+        return new Ghost(abs, effectEmptySize, this.p, null, this.parent.window, new Reverb(abs, effectEmptySize, this.p, null, true), true)
     }
 }
