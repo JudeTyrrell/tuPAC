@@ -4,7 +4,7 @@ import { Element, capsuleMinSize } from './element';
 import Window from "./window";
 import { Ghost } from "./ghosts";
 import Pos from "./position";
-import Icon from "./icon";
+import Icon, { Icons } from "./icon";
 import Canvas from './canvas';
 import Mouse from "./mouse";
 import Distort from './distort';
@@ -138,7 +138,7 @@ export class CanvasOption extends ElementOption {
     constructor(size: Pos, p: p5, parent: ElementMenu) {
         super(size, p, parent);
         this.icon = new Icon(this.pos, this.size, p, this);
-        this.icon.loadImage("../resource/img/canvas.png");
+        this.icon.set(Icons.canvas);
     }
 
     draw(offset: Pos, alpha: number) {
@@ -154,7 +154,7 @@ export abstract class EffectOption extends ElementOption {
     constructor(size: Pos, p: p5, parent: ElementMenu) {
         super(size, p, parent);
         this.icon = new Icon(this.pos, this.size, p, this);
-        this.icon.loadImage("../resource/img/effect.png");
+        this.icon.set(Icons.missing);
     }
 
     draw(offset: Pos, alpha: number) {
@@ -165,12 +165,22 @@ export abstract class EffectOption extends ElementOption {
 }
 
 export class DistortEffectOption extends EffectOption {
+    constructor(size: Pos, p: p5, parent: ElementMenu) {
+        super(size, p, parent);
+        this.icon.set(Icons.distort);
+    }
+
     ghost(abs: Pos) {
         return new Ghost(abs, effectEmptySize, this.p, null, this.parent.window, new Distort(abs, effectEmptySize, this.p, null, true), true)
     }
 }
 
 export class ReverbEffectOption extends EffectOption {
+    constructor(size: Pos, p: p5, parent: ElementMenu) {
+        super(size, p, parent);
+        this.icon.set(Icons.reverb);
+    }
+
     ghost(abs: Pos) {
         return new Ghost(abs, effectEmptySize, this.p, null, this.parent.window, new Reverb(abs, effectEmptySize, this.p, null, true), true)
     }

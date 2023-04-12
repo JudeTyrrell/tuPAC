@@ -19,14 +19,21 @@ const sketch = (p: p5) => {
     Icon.loadResources(p);
     window.p = p;
     
+    
+
     new Mouse(window, p);
     const mouse = new Mouse(window, p);
 
+    let f;
+
     p.setup = () => {
+        f = p.loadFont("../resource/font/Poppins-Regular.ttf");
         p.createCanvas(winSizeX, winSizeY);
 
+        
+
         let inner = window.addCanvas(new Pos(200, 0), new Pos(1000, 1000));
-        inner.setSpeed(200);
+        inner.setSpeed(300);
 
         let fe = window.addFileExplorer(new Pos(0, 0), new Pos(200, 500));
         fe.addFile("..\\resource\\audio\\ah.wav");
@@ -40,6 +47,8 @@ const sketch = (p: p5) => {
 
     p.draw = () => {
         p.background(220);
+        
+        p.textFont(f);
         window.draw();
         
         mouse.updateCursor();

@@ -23,7 +23,7 @@ export class ControlBar extends Element {
         super(Pos.zero(), size, new Pos(0, size.y), p, parent, draggable);
         this.buttonsL = [];
         this.buttonsR = [];
-        this.label = new Label(new Pos((this.size.x - Math.min(titleMaxWidth, this.size.x)) * 0.5, this.size.y * titlePad * 0.5), new Pos(Math.min(titleMaxWidth, this.size.x), this.size.y * (1-titlePad)), "", this.p, this, titleColor);
+        this.label = new Label(new Pos((this.size.x - Math.min(titleMaxWidth, this.size.x)) * 0.5, this.size.y * titlePad), new Pos(Math.min(titleMaxWidth, this.size.x), this.size.y * (1-2*titlePad)), "", this.p, this, titleColor);
         this.label.typeable = false;
     }
 
@@ -36,17 +36,18 @@ export class ControlBar extends Element {
 
     draw(offset: Pos, alpha = 255) {
         let color = this.p.color(controlBarColor);
+        let off = Pos.sum(offset, this.pos);
         color.setAlpha(alpha);
 
         this.simpleRect(offset, null, color);
         for (let button of this.buttonsL) {
-            button.draw(offset);
+            button.draw(off);
         }
         for (let button of this.buttonsR) {
-            button.draw(offset);
+            button.draw(off);
         }
         
-        this.label.draw(offset, alpha);
+        this.label.draw(off, alpha);
     }
 
     addTitle(title: string) {

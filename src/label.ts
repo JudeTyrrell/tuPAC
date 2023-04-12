@@ -15,7 +15,7 @@ export class Label extends Element {
     
     constructor(pos: Pos, size: Pos, text: string, p: p5, parent: Element, color = "#FFFFFF", drag = false, resi = Resi.None, typeable = true) {
         super(pos, size, minTextSize, p, parent, drag, resi);
-        this.height = this.size.y;
+        this.height = this.size.y * 0.9;
         //console.log(this.height);
         this.raw_text = text;
         this.typeable = typeable;
@@ -39,7 +39,7 @@ export class Label extends Element {
     }
 
     updateText(): void {
-        this.p.textSize(this.height * 0.9);
+        this.p.textSize(this.height);
         let text_cut = this.raw_text;
         let char = this.p.textWidth("E");
         let diff = this.size.x - (text_cut.length * char);
@@ -57,13 +57,14 @@ export class Label extends Element {
 
         this.color.setAlpha(alpha);
         this.p.fill(this.color);
-        this.p.textSize(this.height * 0.9);
-        this.p.textAlign('left');
+        this.p.textSize(this.height);
+        this.p.textAlign(this.p.LEFT, this.p.BOTTOM);
 
         let abs = Pos.sum(offset, this.pos);
         let width = this.p.textWidth(this.text);
 
-        this.p.text(this.text, abs.x + ((this.size.x - width) / 2), abs.y + this.height * 0.1, abs.x + this.size.x, abs.y + this.height);
+        //console.log(abs.y);
+        this.p.text(this.text, abs.x + ((this.size.x - width) / 2), abs.y + this.size.y);
     }
 
     clicked(mouse: Mouse): Element {

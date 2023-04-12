@@ -12,7 +12,9 @@ export enum Icons {
     pause,
     stop,
     canvas,
-    plus
+    plus,
+    distort,
+    reverb
 }
 
 export default class Icon extends Element {
@@ -52,7 +54,9 @@ export default class Icon extends Element {
             p.loadImage("../resource/img/pause.png"),
             p.loadImage("../resource/img/stop.png"),
             p.loadImage("../resource/img/canvas.png"),
-            p.loadImage("../resource/img/plus.png")
+            p.loadImage("../resource/img/plus.png"),
+            p.loadImage("../resource/img/distort.png"),
+            p.loadImage("../resource/img/reverb.png")
         ]
     }
 
