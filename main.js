@@ -8,7 +8,7 @@ const createWindow = () => {
     });
 
     const win = new BrowserWindow({
-        width: 1200,
+        width: 1400,
         height: 1000,
         webPreferences: {
             nodeIntegration: true,
@@ -21,7 +21,7 @@ const createWindow = () => {
     win.loadFile('dist/index.html');
 
     win.removeMenu();
-    win.webContents.openDevTools();
+    //win.webContents.openDevTools();
 };
 
 app.whenReady().then(() => {

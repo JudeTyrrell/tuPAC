@@ -58,13 +58,13 @@ export class Label extends Element {
         this.color.setAlpha(alpha);
         this.p.fill(this.color);
         this.p.textSize(this.height);
-        this.p.textAlign(this.p.LEFT, this.p.BOTTOM);
+        this.p.textAlign(this.p.CENTER, this.p.TOP);
 
         let abs = Pos.sum(offset, this.pos);
         let width = this.p.textWidth(this.text);
 
-        //console.log(abs.y);
-        this.p.text(this.text, abs.x + ((this.size.x - width) / 2), abs.y + this.size.y);
+        //console.log(this.text);
+        this.p.text(this.text, abs.x + (this.size.x/2), abs.y);
     }
 
     clicked(mouse: Mouse): Element {
