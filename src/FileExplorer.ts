@@ -90,7 +90,7 @@ export class File extends ElementOption {
         this.icon = new Icon(FileIconPad, FileIconSize, p, this, Icons.file);
         let name = File.getName(file);
         this.p.textSize(FilenameHeight);
-        this.label = new Label(new Pos((this.size.x - this.p.textWidth(name))/ 2, 2 * FileIconPad.y + this.icon.size.y), new Pos(this.size.x, FilenameHeight), name, this.p, this);
+        this.label = new Label(new Pos(0, 2 * FileIconPad.y + this.icon.size.y), new Pos(this.size.x, FilenameHeight), name, this.p, this);
     }
 
     draw(offset: Pos, alpha = 255): void {
@@ -100,11 +100,6 @@ export class File extends ElementOption {
         let off = Pos.sum(offset, this.pos);
 
         this.icon.draw(off, alpha);
-        let txt = File.getName(this.file);
-        this.p.textSize(FilenameHeight);
-        if (this.p.textWidth(txt) > this.size.x) {
-            txt = "..." + txt.slice(-10);
-        }
 
         this.label.draw(off, alpha);
     }

@@ -68,7 +68,14 @@ export default class Sample extends Playable {
         let length = Math.floor((this.size.x - (wfPad.x * 2)) / (wfLineThickness + wfLinePad));
         let wf = new Float32Array(length);
 
-        let maxV = Math.max(...buff);
+        let len = buff.length;
+        let maxV = -Infinity;
+
+        while (len--) {
+            if (buff[len] > maxV) {
+                maxV = buff[len];
+            }
+        }
 
         let ratio = Math.floor(buff.length / length);
 
@@ -95,6 +102,7 @@ export default class Sample extends Playable {
 
     updateWaveform() {
         if (this.parent != null) {
+            console.log(Sample.buffers);
             for (let wf of Sample.buffers.entries()) {
                 if (wf[0] === this.sample) {
                     this.waveform = this.generateWaveform(wf[1]);

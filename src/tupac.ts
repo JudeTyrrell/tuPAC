@@ -33,7 +33,7 @@ const sketch = (p: p5) => {
         
 
         let inner = window.addCanvas(new Pos(200, 0), new Pos(1400, 1000));
-        inner.setSpeed(300);
+        inner.setSpeed(250);
 
         let fe = window.addFileExplorer(new Pos(0, 0), new Pos(200, 500));
 
