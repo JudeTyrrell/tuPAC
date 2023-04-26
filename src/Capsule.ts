@@ -3,6 +3,7 @@ import * as Tone from "tone";
 import Pos, { Box } from "./position";
 import { Playable } from './Playable';
 import { Resi, capsuleMinSize, Element } from "./element";
+import { mouse } from "./tupac";
 
 
 export abstract class Capsule extends Playable {
@@ -91,7 +92,7 @@ export abstract class Capsule extends Playable {
         let inner = null;
         for (let element of this.playables) {
             inner = element.topUnderPos(abs, pos);
-            if (inner != null) {
+            if (inner != null && inner != mouse.held) {
                 top = inner;
             }
         }
@@ -120,6 +121,7 @@ export abstract class Capsule extends Playable {
     resizeTo(size: Pos): Pos {
         let newSize = Pos.maxXY(size, this.minSize);
         let maxSize = Pos.diff(this.parent.inner.size, this.pos);
+        maxSize = Pos.maxXY(maxSize, newSize);
         newSize = Pos.minXY(maxSize, newSize);
         let change = Pos.diff(newSize, this.size);
         if (Box.smallerThan(new Box(this.pos, newSize), this.parent.inner)) {

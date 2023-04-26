@@ -119,7 +119,7 @@ export abstract class Element {
         return this.topUnderPos(offset, this.mPos());
     };
 
-    topUnderPos(offset: any, pos: Pos): any {
+    topUnderPos(offset: Pos, pos: Pos): any {
         let abs = Pos.sum(this.pos, offset);
         if (Pos.inBox(abs, this.size, this.mPos())) {
             return this;

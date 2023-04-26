@@ -6,6 +6,7 @@ import p5 from "p5";
 import { ElementMenu } from "./elementmenu";
 import FileExplorer from "./FileExplorer";
 import { Label } from "./label";
+import { mouse } from "./tupac";
 
 const elementSize = new Pos(70, 80);
 

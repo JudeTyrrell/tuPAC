@@ -7,7 +7,7 @@ import Canvas, { controlBarColor, buttonSize, buttonBufferX, buttonBufferY } fro
 import { Icons } from "./icon";
 import Mouse from "./mouse";
 import { Ghost } from './ghosts';
-import { window } from './tupac';
+import { mouse, window } from './tupac';
 import { Label } from './label';
 
 const titlePad = 0.1;
@@ -118,7 +118,7 @@ export class ControlBar extends Element {
         let top = null;
         let abs = Pos.sum(offset, this.pos);
 
-        if (Pos.inBox(abs, this.size, pos)) {
+        if (Pos.inBox(abs, this.size, pos) && this.parent != mouse.held) {
             top = this;
             let inner = null;
             for (let button of this.buttonsL) {

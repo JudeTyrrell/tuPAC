@@ -11,6 +11,7 @@ export const winSizeY = 1000;
 export const resizeLenience = 3;
 
 export let window = new Window(winSizeX, winSizeY, null);
+export let mouse;
 
 const cursors = ["default", "default", "ew-resize", "ns-resize", "nwse-resize", "text"];
 
@@ -18,11 +19,8 @@ const sketch = (p: p5) => {
     
     Icon.loadResources(p);
     window.p = p;
-    
-    
 
-    new Mouse(window, p);
-    const mouse = new Mouse(window, p);
+    mouse = new Mouse(window, p);
 
     let f;
 
@@ -78,12 +76,12 @@ const sketch = (p: p5) => {
             window.typeBackspace();
         }
         if (p.keyCode === p.DELETE) {
-            let h = mouse.held;
+            let h = mouse.lastClicked;
             if (h != null && h.parent['playables'] != null) {
                 if (h['scheduleId'] != null) {
                     (h as Playable).unschedule();
                 }
-                (mouse.held.parent as Capsule).remove(h);
+                (h.parent as Capsule).remove(h);
             }
         }
     }

@@ -31,4 +31,8 @@ export class Ghost extends Element {
         this.element.setSpeed(onto.speed);
         this.element.updateStartTime();
     }
+
+    topUnderPos(offset: Pos, pos: Pos) {
+        return null;
+    }
 }

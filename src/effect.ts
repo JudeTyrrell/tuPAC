@@ -32,7 +32,7 @@ export default abstract class Effect extends Capsule {
         super.add(playable);
         this.resizeTo(new Pos(playable.size.x, playable.size.y + effectBarHeight));
         playable.setPos(this.inner.origin);
-        console.log(playable);
+        //console.log(playable);
         return playable;
     }
 
@@ -41,6 +41,9 @@ export default abstract class Effect extends Capsule {
     }
 
     draw(offset: Pos, alpha = 255): void {
+        if(this.playables[0] != null) {
+            this.resizeTo(new Pos(this.playables[0].size.x, this.size.y));
+        }
         let off = Pos.sum(this.pos, offset);
         let stroke = this.p.color(effectOutline);
         stroke.setAlpha(alpha);
@@ -68,9 +71,6 @@ export default abstract class Effect extends Capsule {
     
     updateStartTime(): void {
         super.updateStartTime();
-        if(this.playables[0] != null) {
-            this.resizeTo(new Pos(this.playables[0].size.x, this.size.y));
-        }
     }
 
     abstract copy(): Effect;

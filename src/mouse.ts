@@ -31,6 +31,7 @@ export default class Mouse {
     cursor: CursorState;
     cursorOff: Pos;
     held: Element;
+    lastClicked: Element;
     p: p5;
     window: Window;
 
@@ -104,11 +105,12 @@ export default class Mouse {
 
     leftClick() {
         let clicked = this.window.topUnderMouse(Pos.zero());
-        console.log(clicked);
+        //console.log(clicked);
 
         let abs = clicked.getAbsolutePos();
         this.cursorOff = Pos.diff(clicked.mPos(), abs);
         this.held = clicked.clicked(this);
+        this.lastClicked = this.held;
         this.window.typingInto = null;
         if (this.cursor === CursorState.type) {
             this.window.typingInto = clicked as Label;
@@ -137,12 +139,13 @@ export default class Mouse {
 
     release() {
         if (this.state === MouseState.dragging) {
-            let top = this.window.topUnderPos(Pos.zero(), Pos.sum(this.held.getAbsolutePos(), oneOff));
-            //console.log(top);
+            let top = this.window.topUnderPos(Pos.zero(), this.held.mPos());
+            console.log(top);
             if (top != null && top['add'] != undefined) {
                 this.held.drop(top);
             }
         }
+        this.held = null;
         this.state = MouseState.free;
     }
 }
